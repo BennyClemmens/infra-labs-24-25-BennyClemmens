@@ -1,5 +1,6 @@
 # site.yml
 ---
 - hosts: all
+  become: true
   roles:
     - dockerlab

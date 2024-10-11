@@ -21,6 +21,489 @@ In this lab assignment, you will learn the basics on how to set up a build pipel
 
 For this lab assignment, we'll be using the `dockerlab` environment. Start the `dockerlab` VM and log in with `vagrant ssh`. This VM is an Ubuntu 20.04 system with Docker installed. A container will already be running (check this!) with Portainer, a webinterface to manage containers. It can be accessed on <http://192.168.56.20:9000/>. You will be asked to create a password for the admin user. Portainer is not part of this assignment, but you can use it to inspect the running containers.
 
+```bash
+Benny@FLAB2021 MINGW64 /c/DATA/GIT/IA/infra-labs-24-25-BennyClemmens/dockerlab (main)
+$ vagrant status
+==> vagrant: A new version of Vagrant is available: 2.4.1 (installed version: 2.3.7)!
+==> vagrant: To upgrade visit: https://www.vagrantup.com/downloads.html
+
+Current machine states:
+
+dockerlab                 not created (virtualbox)
+
+The environment has not yet been created. Run `vagrant up` to
+create the environment. If a machine is not created, only the
+default provider will be shown. So if a provider is not listed,
+then the machine is not created for that environment.
+
+Benny@FLAB2021 MINGW64 /c/DATA/GIT/IA/infra-labs-24-25-BennyClemmens/dockerlab (main)
+$ vagrant up
+Bringing machine 'dockerlab' up with 'virtualbox' provider...
+==> dockerlab: Box 'bento/ubuntu-24.04' could not be found. Attempting to find and install...
+    dockerlab: Box Provider: virtualbox
+    dockerlab: Box Version: >= 0
+==> dockerlab: Loading metadata for box 'bento/ubuntu-24.04'
+    dockerlab: URL: https://vagrantcloud.com/bento/ubuntu-24.04
+==> dockerlab: Adding box 'bento/ubuntu-24.04' (v202404.26.0) for provider: virtualbox
+    dockerlab: Downloading: https://vagrantcloud.com/bento/boxes/ubuntu-24.04/versions/202404.26.0/providers/virtualbox/amd64/vagrant.box
+    dockerlab:
+==> dockerlab: Successfully added box 'bento/ubuntu-24.04' (v202404.26.0) for 'virtualbox'!
+==> dockerlab: Importing base box 'bento/ubuntu-24.04'...
+==> dockerlab: Matching MAC address for NAT networking...
+==> dockerlab: Checking if box 'bento/ubuntu-24.04' version '202404.26.0' is up to date...
+==> dockerlab: Setting the name of the VM: dockerlab_dockerlab_1728631102070_51583
+==> dockerlab: Clearing any previously set network interfaces...
+==> dockerlab: Preparing network interfaces based on configuration...
+    dockerlab: Adapter 1: nat
+    dockerlab: Adapter 2: hostonly
+==> dockerlab: Forwarding ports...
+    dockerlab: 22 (guest) => 2222 (host) (adapter 1)
+==> dockerlab: Running 'pre-boot' VM customizations...
+==> dockerlab: Booting VM...
+==> dockerlab: Waiting for machine to boot. This may take a few minutes...
+    dockerlab: SSH address: 127.0.0.1:2222
+    dockerlab: SSH username: vagrant
+    dockerlab: SSH auth method: private key
+    dockerlab:
+    dockerlab: Vagrant insecure key detected. Vagrant will automatically replace
+    dockerlab: this with a newly generated keypair for better security.
+    dockerlab:
+    dockerlab: Inserting generated public key within guest...
+    dockerlab: Removing insecure key from the guest if it's present...
+    dockerlab: Key inserted! Disconnecting and reconnecting using new SSH key...
+==> dockerlab: Machine booted and ready!
+==> dockerlab: Checking for guest additions in VM...
+==> dockerlab: Setting hostname...
+==> dockerlab: Configuring and enabling network interfaces...
+==> dockerlab: Mounting shared folders...
+    dockerlab: /vagrant => C:/DATA/GIT/IA/infra-labs-24-25-BennyClemmens/dockerlab
+==> dockerlab: Running provisioner: ansible_local...
+    dockerlab: Installing Ansible...
+The requested Ansible compatibility mode (2.0) is in conflict with
+the Ansible installation on your Vagrant guest system (currently: 10.5.0).
+See https://docs.vagrantup.com/v2/provisioning/ansible_common.html#compatibility_mode
+for more information.
+```
+
+`some vagrant/ansible problem that needs to be resolved first ...`
+
+- VagrantFile
+  - `ansible.compatibility_mode = '2.0'` => `ansible.compatibility_mode = 'auto'`
+
+```bash
+Benny@FLAB2021 MINGW64 /c/DATA/GIT/IA/infra-labs-24-25-BennyClemmens/dockerlab (main)
+$ vagrant destroy -f
+==> dockerlab: Forcing shutdown of VM...
+==> dockerlab: Destroying VM and associated drives...
+
+Benny@FLAB2021 MINGW64 /c/DATA/GIT/IA/infra-labs-24-25-BennyClemmens/dockerlab (main)
+$ vagrant up
+Bringing machine 'dockerlab' up with 'virtualbox' provider...
+==> dockerlab: Importing base box 'bento/ubuntu-24.04'...
+==> dockerlab: Matching MAC address for NAT networking...
+==> dockerlab: Checking if box 'bento/ubuntu-24.04' version '202404.26.0' is up to date...
+==> dockerlab: Setting the name of the VM: dockerlab_dockerlab_1728641516159_26255
+==> dockerlab: Clearing any previously set network interfaces...
+==> dockerlab: Preparing network interfaces based on configuration...
+    dockerlab: Adapter 1: nat
+    dockerlab: Adapter 2: hostonly
+==> dockerlab: Forwarding ports...
+    dockerlab: 22 (guest) => 2222 (host) (adapter 1)
+==> dockerlab: Running 'pre-boot' VM customizations...
+==> dockerlab: Booting VM...
+==> dockerlab: Waiting for machine to boot. This may take a few minutes...
+    dockerlab: SSH address: 127.0.0.1:2222
+    dockerlab: SSH username: vagrant
+    dockerlab: SSH auth method: private key
+    dockerlab:
+    dockerlab: Vagrant insecure key detected. Vagrant will automatically replace
+    dockerlab: this with a newly generated keypair for better security.
+    dockerlab:
+    dockerlab: Inserting generated public key within guest...
+    dockerlab: Removing insecure key from the guest if it's present...
+    dockerlab: Key inserted! Disconnecting and reconnecting using new SSH key...
+==> dockerlab: Machine booted and ready!
+==> dockerlab: Checking for guest additions in VM...
+==> dockerlab: Setting hostname...
+==> dockerlab: Configuring and enabling network interfaces...
+==> dockerlab: Mounting shared folders...
+    dockerlab: /vagrant => C:/DATA/GIT/IA/infra-labs-24-25-BennyClemmens/dockerlab
+==> dockerlab: Running provisioner: ansible_local...
+    dockerlab: Installing Ansible...
+    dockerlab: Running ansible-playbook...
+usage: ansible-playbook [-h] [--version] [-v] [--private-key PRIVATE_KEY_FILE]
+                        [-u REMOTE_USER] [-c CONNECTION] [-T TIMEOUT]
+                        [--ssh-common-args SSH_COMMON_ARGS]
+                        [--sftp-extra-args SFTP_EXTRA_ARGS]
+                        [--scp-extra-args SCP_EXTRA_ARGS]
+                        [--ssh-extra-args SSH_EXTRA_ARGS]
+                        [-k | --connection-password-file CONNECTION_PASSWORD_FILE]
+                        [--force-handlers] [--flush-cache] [-b]
+                        [--become-method BECOME_METHOD]
+                        [--become-user BECOME_USER]
+                        [-K | --become-password-file BECOME_PASSWORD_FILE]
+                        [-t TAGS] [--skip-tags SKIP_TAGS] [-C] [-D]
+                        [-i INVENTORY] [--list-hosts] [-l SUBSET]
+                        [-e EXTRA_VARS] [--vault-id VAULT_IDS]
+                        [-J | --vault-password-file VAULT_PASSWORD_FILES]
+                        [-f FORKS] [-M MODULE_PATH] [--syntax-check]
+                        [--list-tasks] [--list-tags] [--step]
+                        [--start-at-task START_AT_TASK]
+                        playbook [playbook ...]
+ansible-playbook: error: unrecognized arguments: --sudo
+
+usage: ansible-playbook [-h] [--version] [-v] [--private-key PRIVATE_KEY_FILE]
+                        [-u REMOTE_USER] [-c CONNECTION] [-T TIMEOUT]
+                        [--ssh-common-args SSH_COMMON_ARGS]
+                        [--sftp-extra-args SFTP_EXTRA_ARGS]
+                        [--scp-extra-args SCP_EXTRA_ARGS]
+                        [--ssh-extra-args SSH_EXTRA_ARGS]
+                        [-k | --connection-password-file CONNECTION_PASSWORD_FILE]
+                        [--force-handlers] [--flush-cache] [-b]
+                        [--become-method BECOME_METHOD]
+                        [--become-user BECOME_USER]
+                        [-K | --become-password-file BECOME_PASSWORD_FILE]
+                        [-t TAGS] [--skip-tags SKIP_TAGS] [-C] [-D]
+                        [-i INVENTORY] [--list-hosts] [-l SUBSET]
+                        [-e EXTRA_VARS] [--vault-id VAULT_IDS]
+                        [-J | --vault-password-file VAULT_PASSWORD_FILES]
+                        [-f FORKS] [-M MODULE_PATH] [--syntax-check]
+                        [--list-tasks] [--list-tags] [--step]
+                        [--start-at-task START_AT_TASK]
+                        playbook [playbook ...]
+
+Runs Ansible playbooks, executing the defined tasks on the targeted hosts.
+
+positional arguments:
+  playbook              Playbook(s)
+
+options:
+  --become-password-file BECOME_PASSWORD_FILE, --become-pass-file BECOME_PASSWORD_FILE
+                        Become password file
+  --connection-password-file CONNECTION_PASSWORD_FILE, --conn-pass-file CONNECTION_PASSWORD_FILE
+                        Connection password file
+  --flush-cache         clear the fact cache for every host in inventory
+  --force-handlers      run handlers even if a task fails
+  --list-hosts          outputs a list of matching hosts; does not execute
+                        anything else
+  --list-tags           list all available tags
+  --list-tasks          list all tasks that would be executed
+  --skip-tags SKIP_TAGS
+                        only run plays and tasks whose tags do not match these
+                        values. This argument may be specified multiple times.
+  --start-at-task START_AT_TASK
+                        start the playbook at the task matching this name
+  --step                one-step-at-a-time: confirm each task before running
+  --syntax-check        perform a syntax check on the playbook, but do not
+                        execute it
+  --vault-id VAULT_IDS  the vault identity to use. This argument may be
+                        specified multiple times.
+  --vault-password-file VAULT_PASSWORD_FILES, --vault-pass-file VAULT_PASSWORD_FILES
+                        vault password file
+  --version             show program's version number, config file location,
+                        configured module search path, module location,
+                        executable location and exit
+  -C, --check           don't make any changes; instead, try to predict some
+                        of the changes that may occur
+  -D, --diff            when changing (small) files and templates, show the
+                        differences in those files; works great with --check
+  -J, --ask-vault-password, --ask-vault-pass
+                        ask for vault password
+  -K, --ask-become-pass
+                        ask for privilege escalation password
+  -M MODULE_PATH, --module-path MODULE_PATH
+                        prepend colon-separated path(s) to module library
+                        (default={{ ANSIBLE_HOME ~
+                        "/plugins/modules:/usr/share/ansible/plugins/modules"
+                        }}). This argument may be specified multiple times.
+  -e EXTRA_VARS, --extra-vars EXTRA_VARS
+                        set additional variables as key=value or YAML/JSON, if
+                        filename prepend with @. This argument may be
+                        specified multiple times.
+  -f FORKS, --forks FORKS
+                        specify number of parallel processes to use
+                        (default=5)
+  -h, --help            show this help message and exit
+  -i INVENTORY, --inventory INVENTORY, --inventory-file INVENTORY
+                        specify inventory host path or comma separated host
+                        list. --inventory-file is deprecated. This argument
+                        may be specified multiple times.
+  -k, --ask-pass        ask for connection password
+  -l SUBSET, --limit SUBSET
+                        further limit selected hosts to an additional pattern
+  -t TAGS, --tags TAGS  only run plays and tasks tagged with these values.
+                        This argument may be specified multiple times.
+  -v, --verbose         Causes Ansible to print more debug messages. Adding
+                        multiple -v will increase the verbosity, the builtin
+                        plugins currently evaluate up to -vvvvvv. A reasonable
+                        level to start is -vvv, connection debugging might
+                        require -vvvv. This argument may be specified multiple
+                        times.
+
+Connection Options:
+  control as whom and how to connect to hosts
+
+  --private-key PRIVATE_KEY_FILE, --key-file PRIVATE_KEY_FILE
+                        use this file to authenticate the connection
+  --scp-extra-args SCP_EXTRA_ARGS
+                        specify extra arguments to pass to scp only (e.g. -l)
+  --sftp-extra-args SFTP_EXTRA_ARGS
+                        specify extra arguments to pass to sftp only (e.g. -f,
+                        -l)
+  --ssh-common-args SSH_COMMON_ARGS
+                        specify common arguments to pass to sftp/scp/ssh (e.g.
+                        ProxyCommand)
+  --ssh-extra-args SSH_EXTRA_ARGS
+                        specify extra arguments to pass to ssh only (e.g. -R)
+  -T TIMEOUT, --timeout TIMEOUT
+                        override the connection timeout in seconds (default
+                        depends on connection)
+  -c CONNECTION, --connection CONNECTION
+                        connection type to use (default=ssh)
+  -u REMOTE_USER, --user REMOTE_USER
+                        connect as this user (default=None)
+
+Privilege Escalation Options:
+  control how and which user you become as on target hosts
+
+  --become-method BECOME_METHOD
+                        privilege escalation method to use (default=sudo), use
+                        `ansible-doc -t become -l` to list valid choices.
+  --become-user BECOME_USER
+                        run operations as this user (default=root)
+  -b, --become          run operations with become (does not imply password
+                        prompting)
+Ansible failed to complete successfully. Any error output should be
+visible above. Please fix these errors and try again.
+```
+
+`vagrant translates ansible.become = true into running ansible with a non existing --sudo`
+
+- VagrantFile
+  - `ansible.become = true` => `# ansible.become = true`
+
+```bash
+Benny@FLAB2021 MINGW64 /c/DATA/GIT/IA/infra-labs-24-25-BennyClemmens/dockerlab (main)
+$ vagrant destroy -f
+==> dockerlab: Forcing shutdown of VM...
+==> dockerlab: Destroying VM and associated drives...
+
+Benny@FLAB2021 MINGW64 /c/DATA/GIT/IA/infra-labs-24-25-BennyClemmens/dockerlab (main)
+$ vagrant up
+Bringing machine 'dockerlab' up with 'virtualbox' provider...
+==> dockerlab: Importing base box 'bento/ubuntu-24.04'...
+==> dockerlab: Matching MAC address for NAT networking...
+==> dockerlab: Checking if box 'bento/ubuntu-24.04' version '202404.26.0' is up to date...
+==> dockerlab: Setting the name of the VM: dockerlab_dockerlab_1728641808877_4463
+==> dockerlab: Clearing any previously set network interfaces...
+==> dockerlab: Preparing network interfaces based on configuration...
+    dockerlab: Adapter 1: nat
+    dockerlab: Adapter 2: hostonly
+==> dockerlab: Forwarding ports...
+    dockerlab: 22 (guest) => 2222 (host) (adapter 1)
+==> dockerlab: Running 'pre-boot' VM customizations...
+==> dockerlab: Booting VM...
+==> dockerlab: Waiting for machine to boot. This may take a few minutes...
+    dockerlab: SSH address: 127.0.0.1:2222
+    dockerlab: SSH username: vagrant
+    dockerlab: SSH auth method: private key
+    dockerlab:
+    dockerlab: Vagrant insecure key detected. Vagrant will automatically replace
+    dockerlab: this with a newly generated keypair for better security.
+    dockerlab:
+    dockerlab: Inserting generated public key within guest...
+    dockerlab: Removing insecure key from the guest if it's present...
+    dockerlab: Key inserted! Disconnecting and reconnecting using new SSH key...
+==> dockerlab: Machine booted and ready!
+==> dockerlab: Checking for guest additions in VM...
+==> dockerlab: Setting hostname...
+==> dockerlab: Configuring and enabling network interfaces...
+==> dockerlab: Mounting shared folders...
+    dockerlab: /vagrant => C:/DATA/GIT/IA/infra-labs-24-25-BennyClemmens/dockerlab
+==> dockerlab: Running provisioner: ansible_local...
+    dockerlab: Installing Ansible...
+    dockerlab: Running ansible-playbook...
+
+PLAY [all] *********************************************************************
+
+TASK [Gathering Facts] *********************************************************
+ok: [dockerlab]
+[WARNING]: Platform linux on host dockerlab is using the discovered Python
+interpreter at /usr/bin/python3.12, but future installation of another Python
+interpreter could change the meaning of that path. See
+https://docs.ansible.com/ansible-
+core/2.17/reference_appendices/interpreter_discovery.html for more information.
+
+TASK [dockerlab : Include distribution specific variables] *********************
+ok: [dockerlab] => (item=/vagrant/ansible/roles/dockerlab/vars/Ubuntu.yml)
+
+TASK [dockerlab : Ensure the necessary (apt) packages are installed] ***********
+fatal: [dockerlab]: FAILED! => {"changed": false, "msg": "Failed to lock apt for exclusive operation: Failed to lock directory /var/lib/apt/lists/: E:Could not open lock file /var/lib/apt/lists/lock - open (13: Permission denied)"}
+
+PLAY RECAP *********************************************************************
+dockerlab                  : ok=2    changed=0    unreachable=0    failed=1    skipped=0    rescued=0    ignored=0
+
+Ansible failed to complete successfully. Any error output should be
+visible above. Please fix these errors and try again.
+
+Benny@FLAB2021 MINGW64 /c/DATA/GIT/IA/infra-labs-24-25-BennyClemmens/dockerlab (main)
+```
+
+`now the playbook doesn't seem to have the correct rights`
+
+- ansible/site.yml
+  - added `become: true`
+
+```bash
+Benny@FLAB2021 MINGW64 /c/DATA/GIT/IA/infra-labs-24-25-BennyClemmens/dockerlab (main)
+$ vagrant destroy -f
+==> dockerlab: Forcing shutdown of VM...
+==> dockerlab: Destroying VM and associated drives...
+
+Benny@FLAB2021 MINGW64 /c/DATA/GIT/IA/infra-labs-24-25-BennyClemmens/dockerlab (main)
+$ vagrant up
+Bringing machine 'dockerlab' up with 'virtualbox' provider...
+==> dockerlab: Importing base box 'bento/ubuntu-24.04'...
+==> dockerlab: Matching MAC address for NAT networking...
+==> dockerlab: Checking if box 'bento/ubuntu-24.04' version '202404.26.0' is up to date...
+==> dockerlab: Setting the name of the VM: dockerlab_dockerlab_1728642097284_38928
+==> dockerlab: Clearing any previously set network interfaces...
+==> dockerlab: Preparing network interfaces based on configuration...
+    dockerlab: Adapter 1: nat
+    dockerlab: Adapter 2: hostonly
+==> dockerlab: Forwarding ports...
+    dockerlab: 22 (guest) => 2222 (host) (adapter 1)
+==> dockerlab: Running 'pre-boot' VM customizations...
+==> dockerlab: Booting VM...
+==> dockerlab: Waiting for machine to boot. This may take a few minutes...
+    dockerlab: SSH address: 127.0.0.1:2222
+    dockerlab: SSH username: vagrant
+    dockerlab: SSH auth method: private key
+    dockerlab:
+    dockerlab: Vagrant insecure key detected. Vagrant will automatically replace
+    dockerlab: this with a newly generated keypair for better security.
+    dockerlab:
+    dockerlab: Inserting generated public key within guest...
+    dockerlab: Removing insecure key from the guest if it's present...
+    dockerlab: Key inserted! Disconnecting and reconnecting using new SSH key...
+==> dockerlab: Machine booted and ready!
+==> dockerlab: Checking for guest additions in VM...
+==> dockerlab: Setting hostname...
+==> dockerlab: Configuring and enabling network interfaces...
+==> dockerlab: Mounting shared folders...
+    dockerlab: /vagrant => C:/DATA/GIT/IA/infra-labs-24-25-BennyClemmens/dockerlab
+==> dockerlab: Running provisioner: ansible_local...
+    dockerlab: Installing Ansible...
+    dockerlab: Running ansible-playbook...
+
+PLAY [all] *********************************************************************
+
+TASK [Gathering Facts] *********************************************************
+[WARNING]: Platform linux on host dockerlab is using the discovered Python
+interpreter at /usr/bin/python3.12, but future installation of another Python
+interpreter could change the meaning of that path. See
+https://docs.ansible.com/ansible-
+core/2.17/reference_appendices/interpreter_discovery.html for more information.
+ok: [dockerlab]
+
+TASK [dockerlab : Include distribution specific variables] *********************
+ok: [dockerlab] => (item=/vagrant/ansible/roles/dockerlab/vars/Ubuntu.yml)
+
+TASK [dockerlab : Ensure the necessary (apt) packages are installed] ***********
+changed: [dockerlab]
+
+TASK [dockerlab : Ensure the Docker group exists] ******************************
+ok: [dockerlab]
+
+TASK [dockerlab : Ensure user Vagrant is a member of the Docker group] *********
+changed: [dockerlab]
+
+TASK [dockerlab : Ensure Docker daemon metrics can be scraped by Prometheus] ***
+changed: [dockerlab]
+
+TASK [dockerlab : Ensure necessary services are running and enabled] ***********
+ok: [dockerlab] => (item=docker.service)
+
+TASK [dockerlab : Enable some useful aliases for managing Docker] **************
+changed: [dockerlab]
+
+TASK [dockerlab : Create a Docker volume for persistent data] ******************
+changed: [dockerlab] => (item=portainer_data)
+
+TASK [dockerlab : Create a Docker internal network for permanent containers] ***
+changed: [dockerlab]
+
+TASK [dockerlab : Create a Docker container for Portainer] *********************
+changed: [dockerlab]
+
+RUNNING HANDLER [dockerlab : restart docker] ***********************************
+changed: [dockerlab]
+
+PLAY RECAP *********************************************************************
+dockerlab                  : ok=12   changed=8    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+
+Benny@FLAB2021 MINGW64 /c/DATA/GIT/IA/infra-labs-24-25-BennyClemmens/dockerlab (main)
+$ vagrant ssh
+Welcome to Ubuntu 24.04 LTS (GNU/Linux 6.8.0-31-generic x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/pro
+
+ System information as of Fri Oct 11 10:35:43 AM UTC 2024
+
+  System load:  0.0                Processes:             146
+  Usage of /:   16.2% of 30.34GB   Users logged in:       0
+  Memory usage: 11%                IPv4 address for eth0: 10.0.2.15
+  Swap usage:   0%
+
+
+This system is built by the Bento project by Chef Software
+More information can be found at https://github.com/chef/bento
+
+Use of this system is acceptance of the OS vendor EULA and License Agreements.
+vagrant@dockerlab:~$ docker ps
+CONTAINER ID   IMAGE                    COMMAND        CREATED          STATUS          PORTS                                                      NAMES
+e5664352c46e   portainer/portainer-ce   "/portainer"   10 minutes ago   Up 10 minutes   0.0.0.0:8000->8000/tcp, 0.0.0.0:9000->9000/tcp, 9443/tcp   portainer
+vagrant@dockerlab:~$ sudo ss -tlnp
+State           Recv-Q          Send-Q                   Local Address:Port                    Peer Address:Port         Process
+LISTEN          0               4096                           0.0.0.0:9000                         0.0.0.0:*             users:(("docker-proxy",pid=7366,fd=4))
+LISTEN          0               4096                        172.30.0.1:9323                         0.0.0.0:*             users:(("dockerd",pid=7218,fd=21))
+LISTEN          0               4096                     127.0.0.53%lo:53                           0.0.0.0:*             users:(("systemd-resolve",pid=6552,fd=15))
+LISTEN          0               4096                           0.0.0.0:8000                         0.0.0.0:*             users:(("docker-proxy",pid=7378,fd=4))
+LISTEN          0               4096                        127.0.0.54:53                           0.0.0.0:*             users:(("systemd-resolve",pid=6552,fd=17))
+LISTEN          0               4096                         127.0.0.1:38175                        0.0.0.0:*             users:(("containerd",pid=5741,fd=10))
+LISTEN          0               4096                                 *:22                                 *:*             users:(("sshd",pid=6563,fd=3),("systemd",pid=1,fd=96))
+```
+
+![001_portainer](img/001_portainer.PNG)
+
+According to <https://portal.portainer.io/knowledge/your-portainer-instance-has-timed-out-for-security-purposes> this is normal behaviour since I was drinking a cup of coffee.
+
+```bash
+vagrant@dockerlab:~$ docker stop portainer
+portainer
+vagrant@dockerlab:~$ docker start portainer
+portainer
+vagrant@dockerlab:~$ docker ps
+CONTAINER ID   IMAGE                    COMMAND        CREATED          STATUS         PORTS                                                      NAMES
+e5664352c46e   portainer/portainer-ce   "/portainer"   18 minutes ago   Up 6 seconds   0.0.0.0:8000->8000/tcp, 0.0.0.0:9000->9000/tcp, 9443/tcp   portainer
+vagrant@dockerlab:~$
+```
+
+![002_portainer](img/002_portainer.PNG)
+
+`admin/adminPORTAINER`
+
+![003_portainer](img/003_portainer.PNG)
+
+While playing with the docker commands I also found a little bug:
+
+- ansible/roles/dockerlab/files/docker-aliases.sh
+  - `alias dip='docker inspect --format="{{ .NetworkSettings.IPAddress }}" $(docker ps --latest --quiet)'` => `alias dip='docker inspect --format="{{ .NetworkSettings.Networks.mgmt_net.IPAddress }}" $(docker ps --latest --quiet)'`
+
+# TODO
+
 You will also need a GitHub repository with a sample application. Create a new Git repository (this can be on your physical system, where Git and access to GitHub is already configured). Some starter code is provided in directory [cicd-sample-app](../dockerlab/cicd-sample-app/).
 
 1. Ensure that Git is configured, e.g. with `git config --global --list` and check that `user.name` and `user.email` are set. If not, make the necessary changes:
