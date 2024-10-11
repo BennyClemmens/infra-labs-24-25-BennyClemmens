@@ -1,5 +1,6 @@
 # Lab assignments
 
+0. [Setup](0-repo.md)
 1. [Continuous Integration/Delivery pipeline with Jenkins](1-cicd.md)
 2. [Configuration Management](2-cfgmgmt.md)
 3. [Monitoring](3-monitoring.md)
