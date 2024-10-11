@@ -502,8 +502,6 @@ While playing with the docker commands I also found a little bug:
 - ansible/roles/dockerlab/files/docker-aliases.sh
   - `alias dip='docker inspect --format="{{ .NetworkSettings.IPAddress }}" $(docker ps --latest --quiet)'` => `alias dip='docker inspect --format="{{ .NetworkSettings.Networks.mgmt_net.IPAddress }}" $(docker ps --latest --quiet)'`
 
-# TODO
-
 You will also need a GitHub repository with a sample application. Create a new Git repository (this can be on your physical system, where Git and access to GitHub is already configured). Some starter code is provided in directory [cicd-sample-app](../dockerlab/cicd-sample-app/).
 
 1. Ensure that Git is configured, e.g. with `git config --global --list` and check that `user.name` and `user.email` are set. If not, make the necessary changes:
@@ -513,10 +511,66 @@ You will also need a GitHub repository with a sample application. Create a new G
     git config --global user.email "bobby.tables@student.hogent.be"
     ```
 
+    ```bash
+    Benny@FLAB2021 MINGW64 /c/DATA/GIT/IA/cicd-sample-app-24-25 (main)
+    $ git config --global --list | grep user.
+    user.name=Benny Clemmens
+    user.email=benny.clemmens@student.hogent.be
+    ```
+
 2. Copy the starter code from `cicd-sample-app` to some new directory outside this Git repository. Enter the copied directory and initialise it as a Git repository with `git init`. Commit all code (e.g. `git add .; git commit -m "Initial commit of sample application"`).
+
+    ```bash
+    Benny@FLAB2021 MINGW64 /c/DATA/GIT/IA/infra-labs-24-25-BennyClemmens/dockerlab (main)
+    $ cp -r cicd-sample-app/ ../../cicd-sample-app-24-25
+
+    Benny@FLAB2021 MINGW64 /c/DATA/GIT/IA/infra-labs-24-25-BennyClemmens/dockerlab (main)
+    $ cd ../../cicd-sample-app-24-25
+
+    Benny@FLAB2021 MINGW64 /c/DATA/GIT/IA/cicd-sample-app-24-25
+    $ git init
+    Initialized empty Git repository in C:/DATA/GIT/IA/cicd-sample-app-24-25/.git/
+
+    Benny@FLAB2021 MINGW64 /c/DATA/GIT/IA/cicd-sample-app-24-25 (main)
+    $ git add .
+
+    Benny@FLAB2021 MINGW64 /c/DATA/GIT/IA/cicd-sample-app-24-25 (main)
+    $ git commit -m 'initial commit'
+    [main (root-commit) 437b4d1] initial commit
+    4 files changed, 48 insertions(+)
+    create mode 100644 sample-app.sh
+    create mode 100644 sample_app.py
+    create mode 100644 static/style.css
+    create mode 100644 templates/index.html
+    ```
+
 3. On GitHub, create a new **public** repository and record the URL, probably something like `https://github.com/USER/cicd-sample-app/` (with USER your GitHub username).
+
+    ![004_github](img/004_github.PNG)
+    `https://github.com/BennyClemmens/cicd-sample-app-24-25`
+
 4. Link your local repository with the one you created on GitHub: `git remote add origin git@github.com:USER/cicd-sample-app.git` (The GitHub page of your repository will show you the exact command needed for this).
-5. Push the locally committed code to GitHub: `git push -u origin main`. Take extra care on this command and the option main. If you receive an error, read the git error message carefully. Maybe your GitHub account is (still) configured to use master instead of main. 
+
+    ```bash
+    Benny@FLAB2021 MINGW64 /c/DATA/GIT/IA/cicd-sample-app-24-25 (main)
+    $ git remote add origin https://github.com/BennyClemmens/cicd-sample-app-24-25.git
+    ```
+
+5. Push the locally committed code to GitHub: `git push -u origin main`. Take extra care on this command and the option main. If you receive an error, read the git error message carefully. Maybe your GitHub account is (still) configured to use master instead of main.
+
+    ```bash
+    Benny@FLAB2021 MINGW64 /c/DATA/GIT/IA/cicd-sample-app-24-25 (main)
+    $ git push -u origin main
+    Enumerating objects: 8, done.
+    Counting objects: 100% (8/8), done.
+    Delta compression using up to 8 threads
+    Compressing objects: 100% (5/5), done.
+    Writing objects: 100% (8/8), 1.03 KiB | 529.00 KiB/s, done.
+    Total 8 (delta 0), reused 0 (delta 0), pack-reused 0
+    To https://github.com/BennyClemmens/cicd-sample-app-24-25.git
+    * [new branch]      main -> main
+    branch 'main' set up to track 'origin/main'.
+    ```
 
 ## 1.2 Build and verify the sample application
 
