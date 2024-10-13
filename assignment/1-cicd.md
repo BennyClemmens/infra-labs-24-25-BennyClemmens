@@ -1200,6 +1200,9 @@ $ echo "cicd-sample-app/tempdir/" >> .gitignore
 ## 1.5 Use Jenkins to build your application
 
 1. On the Jenkins dashboard, click "Create a new job". Enter a suitable name, e.g. *BuildSampleApp*. Select a "free style project" as job type.
+
+    ![012_newjob](img/012_newjob.PNG)
+
 2. The following page allows you to configure the new job. There are a lot of options, so you may be overwhelmed at first.
     - Optionally, enter a description
     - In the section "Source Code Management", select the radio button "Git" and enter the https-URL to your GitHub project, `https://github.com/USER/cicd-sample-app.git`
@@ -1207,15 +1210,120 @@ $ echo "cicd-sample-app/tempdir/" >> .gitignore
     - The branch to be built should be `*/main` instead of the default `*/master`
     - In the section "Build Steps", click "Add a build step" and select "Execute shell" from the dropdown list. enter `bash ./sample-app.sh`
     - Click "Save". You are redirected to the Jenkins dashboard
+
+    ![013_jobsaved](img/013_jobsaved.PNG)
+
 3. The dashboard shows an overview of all build jobs. Click the job you just created and in the menu on the left, start a new build job (*"Build Now"*).
     - Hopefully, the build succeeds. Use the overview of build attempts to view the console output of the build process to. If the build process failed this is where you can find error messages that can help to determine the cause.
+
+    ![014_firstbuild](img/014_firstbuild.PNG)
+
+    ![015_firstbuild_detail](img/015_firstbuild_detail.PNG)
+
+    ![016_firstbuild_console](img/016_firstbuild_console.PNG)
+
+    ```bash
+    Started by user admin
+    Running as SYSTEM
+    Building in workspace /var/jenkins_home/workspace/BuildSampleApp
+    The recommended git tool is: NONE
+    No credentials specified
+    Cloning the remote Git repository
+    Cloning repository https://github.com/BennyClemmens/cicd-sample-app-24-25.git
+    > git init /var/jenkins_home/workspace/BuildSampleApp # timeout=10
+    Fetching upstream changes from https://github.com/BennyClemmens/cicd-sample-app-24-25.git
+    > git --version # timeout=10
+    > git --version # 'git version 2.39.5'
+    > git fetch --tags --force --progress -- https://github.com/BennyClemmens/cicd-sample-app-24-25.git +refs/heads/*:refs/remotes/origin/* # timeout=10
+    > git config remote.origin.url https://github.com/BennyClemmens/cicd-sample-app-24-25.git # timeout=10
+    > git config --add remote.origin.fetch +refs/heads/*:refs/remotes/origin/* # timeout=10
+    Avoid second fetch
+    > git rev-parse refs/remotes/origin/main^{commit} # timeout=10
+    Checking out Revision 437b4d1b3ac16823ea089840e2ce8e69ceb510e0 (refs/remotes/origin/main)
+    > git config core.sparsecheckout # timeout=10
+    > git checkout -f 437b4d1b3ac16823ea089840e2ce8e69ceb510e0 # timeout=10
+    Commit message: "initial commit"
+    First time build. Skipping changelog.
+    [BuildSampleApp] $ /bin/sh -xe /tmp/jenkins1330829810720618608.sh
+    + bash ./sample-app.sh
+    DEPRECATED: The legacy builder is deprecated and will be removed in a future release.
+                Install the buildx component to build images with BuildKit:
+                https://docs.docker.com/go/buildx/
+
+    Sending build context to Docker daemon  6.144kB
+
+    Step 1/7 : FROM python
+    ---> 97fc9ec41404
+    Step 2/7 : RUN pip install flask
+    ---> Using cache
+    ---> b9cc629274bb
+    Step 3/7 : COPY  ./static /home/myapp/static/
+    ---> 856384d9e258
+    Step 4/7 : COPY  ./templates /home/myapp/templates/
+    ---> 25605a2ec013
+    Step 5/7 : COPY  sample_app.py /home/myapp/
+    ---> 00677f56dc2b
+    Step 6/7 : EXPOSE 5050
+    ---> Running in ec2edcdb9976
+    Removing intermediate container ec2edcdb9976
+    ---> 3170bc6c4094
+    Step 7/7 : CMD python /home/myapp/sample_app.py
+    ---> Running in f548e9d55b4b
+    Removing intermediate container f548e9d55b4b
+    ---> 53eac13966cf
+    Successfully built 53eac13966cf
+    Successfully tagged sampleapp:latest
+    5726472da709ab2f99ab7513cddffa046b4b177c81828f0356aab8e1a8f571b6
+    CONTAINER ID   IMAGE                    COMMAND                  CREATED        STATUS                  PORTS                                                      NAMES
+    5726472da709   sampleapp                "/bin/sh -c 'python …"   1 second ago   Up Less than a second   0.0.0.0:5050->5050/tcp, :::5050->5050/tcp                  samplerunning
+    cc1d43012e17   jenkins/jenkins:lts      "/usr/bin/tini -- /u…"   2 days ago     Up 14 minutes           0.0.0.0:8080->8080/tcp, :::8080->8080/tcp, 50000/tcp       jenkins_server
+    507d11f31e5d   portainer/portainer-ce   "/portainer"             2 days ago     Up 21 minutes           0.0.0.0:8000->8000/tcp, 0.0.0.0:9000->9000/tcp, 9443/tcp   portainer
+    Finished: SUCCESS
+    ```
+
+    ```bash
+    vagrant@dockerlab:~$ docker exec --interactive --tty jenkins_server env TERM=xterm /bin/bash
+    root@cc1d43012e17:/# ls /var/jenkins_home/workspace/BuildSampleApp
+    sample-app.sh  sample_app.py  static  tempdir  templates
+    root@cc1d43012e17:/# exit
+    exit
+    ```
+
 4. Ensure the sample application is running by reloading the appropriate browser tab.
+
+    ![017_running.PNG](img/017_running.PNG)
 
 Take some time to realise what you did here, because it's actually quite cool! We launched Jenkins in a Docker container, and the result of the build job is another container that runs alongside it! The specific options when we launched the Jenkins container make sure that this is possible.
 
 If you manage a Jenkins instance for a larger development team, you will probably want to install Jenkins on a dedicated build server, either a physical machine, or a full-fledged virtual machine. Consider the Jenkins Docker image as suitable for testing purposes only.
 
 Remark that if you try to run the build job a second time, it will fail. Check the console output to determine the cause!
+
+```bash
+Started by user admin
+Running as SYSTEM
+Building in workspace /var/jenkins_home/workspace/BuildSampleApp
+The recommended git tool is: NONE
+No credentials specified
+ > git rev-parse --resolve-git-dir /var/jenkins_home/workspace/BuildSampleApp/.git # timeout=10
+Fetching changes from the remote Git repository
+ > git config remote.origin.url https://github.com/BennyClemmens/cicd-sample-app-24-25.git # timeout=10
+Fetching upstream changes from https://github.com/BennyClemmens/cicd-sample-app-24-25.git
+ > git --version # timeout=10
+ > git --version # 'git version 2.39.5'
+ > git fetch --tags --force --progress -- https://github.com/BennyClemmens/cicd-sample-app-24-25.git +refs/heads/*:refs/remotes/origin/* # timeout=10
+ > git rev-parse refs/remotes/origin/main^{commit} # timeout=10
+Checking out Revision 437b4d1b3ac16823ea089840e2ce8e69ceb510e0 (refs/remotes/origin/main)
+ > git config core.sparsecheckout # timeout=10
+ > git checkout -f 437b4d1b3ac16823ea089840e2ce8e69ceb510e0 # timeout=10
+Commit message: "initial commit"
+ > git rev-list --no-walk 437b4d1b3ac16823ea089840e2ce8e69ceb510e0 # timeout=10
+[BuildSampleApp] $ /bin/sh -xe /tmp/jenkins4078699165712119050.sh
++ bash ./sample-app.sh
+mkdir: cannot create directory ‘tempdir’: File exists
+Build step 'Execute shell' marked build as failure
+Finished: FAILURE
+```
 
 ## 1.6 Add a job to test the application
 
