@@ -764,6 +764,9 @@ $ echo "cicd-sample-app/tempdir/" >> .gitignore
     - The last line specifies a name for the container and the image to be used
 
     ```bash
+    vagrant@dockerlab:~$ docker run -p 8080:8080 -u root -v jenkins-data:/var/jenkins_home -v $(which docker):/usr/bin/docker -v /var/run/docker.sock:/var/run/docker.sock -v "$HOME":/home --name jenkins_server jenkins/jenkins:lts
+    Running from: /usr/share/jenkins/jenkins.war
+    webroot: /var/jenkins_home/war
     2024-10-11 12:57:37.753+0000 [id=1]     INFO    winstone.Logger#logInternal: Beginning extraction from war file
     2024-10-11 12:57:38.813+0000 [id=1]     WARNING o.e.j.s.handler.ContextHandler#setContextPath: Empty contextPath
     2024-10-11 12:57:38.872+0000 [id=1]     INFO    org.eclipse.jetty.server.Server#doStart: jetty-10.0.24; built: 2024-08-26T17:58:21.070Z; git: d5384207795da96fad32db8ea8d26b69955bcc03; jvm 17.0.12+7
@@ -809,6 +812,8 @@ $ echo "cicd-sample-app/tempdir/" >> .gitignore
 
     `VM seems to hang at this moment, but actually this is normal behaviour. Output will continue when logging in and installing plugins in 1.4`
 
+    `hanging because we are in attached mode (so we can see the password and logs I'm guessing), solutions TODO: https://stackoverflow.com/questions/25267372/correct-way-to-detach-from-a-container-without-stopping-it`
+
 3. The container is started in the foreground. It will emit a password for the admin user generated at random. Record this password somewhere, because remembering will be impossible for most people. If you do forget the password, you can retrieve it from a specific file inside the container with the command `docker exec -it jenkins_server /bin/cat /var/jenkins_home/secrets/initialAdminPassword`
 
     In a different terminal you could ask ...
@@ -817,6 +822,10 @@ $ echo "cicd-sample-app/tempdir/" >> .gitignore
     vagrant@dockerlab:~$ docker exec -it jenkins_server /bin/cat /var/jenkins_home/secrets/initialAdminPassword
     45131dd06848474799607d97fb925e05
     ```
+
+    `@FLAB2021: a560c21ab0c3402a8ab942bfae73387d`
+
+    `@celcius_win10: d15434828c5a48a59a7698e1f5749962`
 
 ## 1.4 Configure Jenkins
 
