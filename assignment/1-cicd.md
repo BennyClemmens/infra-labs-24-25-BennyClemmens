@@ -1334,6 +1334,50 @@ Build step 'Execute shell' marked build as failure
 Finished: FAILURE
 ```
 
+`A good time to add this`
+
+```bash
+vagrant@dockerlab:~$ docker start jenkins_server
+jenkins_server
+vagrant@dockerlab:~$ docker inspect jenkins_server --format '{{.HostConfig.RestartPolicy.Name}}'
+no
+vagrant@dockerlab:~$ docker update --restart unless-stopped jenkins_server
+jenkins_server
+vagrant@dockerlab:~$ docker inspect jenkins_server --format '{{.HostConfig.RestartPolicy.Name}}'
+unless-stopped
+vagrant@dockerlab:~$ ds
+Images
+REPOSITORY               TAG       IMAGE ID       CREATED        SIZE
+sampleapp                latest    53eac13966cf   46 hours ago   1.03GB
+<none>                   <none>    b3e1c506229d   4 days ago     1.03GB
+portainer/portainer-ce   latest    6c134be467de   8 days ago     301MB
+python                   latest    97fc9ec41404   8 days ago     1.02GB
+jenkins/jenkins          lts       bac101b69b63   13 days ago    470MB
+Containers
+CONTAINER ID   IMAGE                    COMMAND                  CREATED        STATUS                      PORTS                                                      NAMES
+5726472da709   sampleapp                "/bin/sh -c 'python …"   46 hours ago   Exited (137) 46 hours ago                                                              samplerunning
+cc1d43012e17   jenkins/jenkins:lts      "/usr/bin/tini -- /u…"   4 days ago     Up About a minute           0.0.0.0:8080->8080/tcp, :::8080->8080/tcp, 50000/tcp       jenkins_server
+507d11f31e5d   portainer/portainer-ce   "/portainer"             4 days ago     Up 11 minutes               0.0.0.0:8000->8000/tcp, 0.0.0.0:9000->9000/tcp, 9443/tcp   portainer
+```
+
+`after a boot`
+
+```bash
+vagrant@dockerlab:~$ ds
+Images
+REPOSITORY               TAG       IMAGE ID       CREATED        SIZE
+sampleapp                latest    53eac13966cf   47 hours ago   1.03GB
+<none>                   <none>    b3e1c506229d   4 days ago     1.03GB
+portainer/portainer-ce   latest    6c134be467de   8 days ago     301MB
+python                   latest    97fc9ec41404   8 days ago     1.02GB
+jenkins/jenkins          lts       bac101b69b63   13 days ago    470MB
+Containers
+CONTAINER ID   IMAGE                    COMMAND                  CREATED        STATUS                      PORTS                                                      NAMES
+5726472da709   sampleapp                "/bin/sh -c 'python …"   47 hours ago   Exited (137) 46 hours ago                                                              samplerunning
+cc1d43012e17   jenkins/jenkins:lts      "/usr/bin/tini -- /u…"   4 days ago     Up About a minute           0.0.0.0:8080->8080/tcp, :::8080->8080/tcp, 50000/tcp       jenkins_server
+507d11f31e5d   portainer/portainer-ce   "/portainer"             4 days ago     Up About a minute           0.0.0.0:8000->8000/tcp, 0.0.0.0:9000->9000/tcp, 9443/tcp   portainer
+```
+
 ## 1.6 Add a job to test the application
 
 We will now create another job that runs an acceptance test after the build process has finished.
