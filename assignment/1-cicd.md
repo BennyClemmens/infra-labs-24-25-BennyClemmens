@@ -572,8 +572,6 @@ You will also need a GitHub repository with a sample application. Create a new G
     branch 'main' set up to track 'origin/main'.
     ```
 
-### TODO
-
 ## 1.2 Build and verify the sample application
 
 1. Log in to the VM with `vagrant ssh` and go to directory `/vagrant/cicd-sample-app`
@@ -1388,6 +1386,23 @@ Before you begin, you need to know the IP address of both the `sampleapp` and `j
    <h1>You are calling me from 172.17.0.1</h1>
 ```
 
+```bash
+vagrant@dockerlab:~$ APP_IP=$(docker container inspect -f '{{ .NetworkSettings.IPAddress }}' samplerunning) && echo ${APP_IP}
+172.17.0.3
+vagrant@dockerlab:~$ JENKINS_IP=$(docker container inspect -f '{{ .NetworkSettings.IPAddress }}' jenkins_server) && echo ${JENKINS_IP}
+172.17.0.2
+vagrant@dockerlab:~$ curl http://${APP_IP}:5050/
+<html>
+<head>
+    <title>Sample app</title>
+    <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+    <h1>You are calling me from 172.17.0.1</h1>
+</body>
+</html>
+```
+
 Remark that 172.17.0.1 is the IP address of the Docker host, i.e. your `dockerlab` VM. Our acceptance test will consist of running the curl command from the Jenkins server, which will have a different IP address.
 
 1. On the Jenkins dashboard, click "Create a new job". Enter a suitable name, e.g. *TestSampleApp*. Select a "free style project" as job type. Optionally, add a description.
@@ -1401,13 +1416,70 @@ Remark that 172.17.0.1 is the IP address of the Docker host, i.e. your `dockerla
     replacing `APP_IP` and `JENKINS_IP` with the appropriate IP addresses.
 4. Save and run the job to verify if it succeeds
 
+    ```bash
+    Started by user admin
+    Running as SYSTEM
+    Building in workspace /var/jenkins_home/workspace/TestSampleApp
+    [TestSampleApp] $ /bin/sh -xe /tmp/jenkins5343515948104940680.sh
+    + curl http://172.17.0.3:5050
+    + grep You are calling me from 172.17.0.2
+    % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                    Dload  Upload   Total   Spent    Left  Speed
+
+    0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+    100   177  100   177    0     0  75900      0 --:--:-- --:--:-- --:--:-- 88500
+        <h1>You are calling me from 172.17.0.2</h1>
+    Finished: SUCCESS
+    ```
+
     Jenkins can determine whether the job succeeded or failed using the exit status of the command given. When `grep` finds a matching line in the standard output of `curl`, it will finish with exit status 0 (indicating success). If not, it will have exit status 1 (indicating failure). If the command returns a nonzero exit status, it will consider the job to be failed.
+
+    ```bash
+    vagrant@dockerlab:~$ docker exec --interactive --tty jenkins_server env TERM=xterm /bin/bash
+    root@cc1d43012e17:~# curl http://172.17.0.3:5050 | grep "you are calling me from 172.17.0.2"
+    % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                    Dload  Upload   Total   Spent    Left  Speed
+    100   177  100   177    0     0  44651      0 --:--:-- --:--:-- --:--:-- 59000
+    root@cc1d43012e17:~# echo $?
+    1
+    root@cc1d43012e17:~# curl http://172.17.0.3:5050 | grep "You are calling me from 172.17.0.2"
+    % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                    Dload  Upload   Total   Spent    Left  Speed
+    100   177  100   177    0     0  43382      0 --:--:-- --:--:-- --:--:-- 44250
+        <h1>You are calling me from 172.17.0.2</h1>
+    root@cc1d43012e17:~# echo $?
+    0
+    ```
 
     Remark that this is not exactly a full-fledged acceptance test. In a real-life application, you would probably launch a test suite that has to be installed on the Jenkins server.
 
     You could write a bash script that's a bit more useful than the command specified above. For example, if the job fails, the console output will not give you any clue as to why. In case of a failure to find the expected IP address in the output of `curl`, you could print the actual output on the console.
 
+    `TODO`
+
 5. The Jenkins dashboard should now list both the build and test job. Stop and remove the `samplerunning` container and then launch the build job. If you encounter an error try figuring out what is going on. There are multiple ways to tackle this issue either in Jenkins with a correct configuration option or by carefully improving the sample-app.sh script.
+
+```bash
+vagrant@dockerlab:~$ docker stop samplerunning
+samplerunning
+vagrant@dockerlab:~$ docker rm samplerunning
+samplerunning
+```
+
+`this is too simple, it will give an error when there is no container`
+
+`Solution in sample-app.sh, see other github repo:` <https://github.com/BennyClemmens/cicd-sample-app-24-25/blob/main/sample-app.sh>
+
+```bash
+cd tempdir || exit
+docker build -t sampleapp .
+if [ "$(docker ps -q -f name=samplerunning)" ]; then docker stop samplerunning; fi
+if [ "$(docker ps -a -q -f name=samplerunning)" ]; then docker remove samplerunning; fi
+docker run -t -d -p 5050:5050 --name samplerunning sampleapp
+docker ps -a 
+```
+
+![020_buildandtest](img/020_buildandtest.PNG)
 
 ## 1.7 Create a build pipeline
 
