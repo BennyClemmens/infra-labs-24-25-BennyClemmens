@@ -1634,7 +1634,83 @@ In this final step, we will make a change in the application, re-launch the buil
 
 1. Go to your local copy of the Git repository with the sample application. Open file `static/style.css` and change the page background color from "lightsteelblue" into whatever you want.
 2. Save the file, commit your changes and push them to GitHub.
+
+```bash
+PS C:\DATA\GIT\IA\cicd-sample-app-24-25> git add -p .\static\style.css
+diff --git a/static/style.css b/static/style.css
+index 381d8b9..3ba4461 100644
+--- a/static/style.css
++++ b/static/style.css
+@@ -1 +1 @@
+-body {background: lightsteelblue;}
++body {background: gold;}
+(1/1) Stage this hunk [y,n,q,a,d,e,p,?]? y
+
+PS C:\DATA\GIT\IA\cicd-sample-app-24-25> git commit -m 'changed colour in css to test Jenkinsfile'
+[main 840c258] changed colour in css to test Jenkinsfile
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+PS C:\DATA\GIT\IA\cicd-sample-app-24-25> git push
+Enumerating objects: 7, done.
+Counting objects: 100% (7/7), done.
+Delta compression using up to 4 threads
+Compressing objects: 100% (2/2), done.
+Writing objects: 100% (4/4), 360 bytes | 90.00 KiB/s, done.
+Total 4 (delta 1), reused 0 (delta 0), pack-reused 0 (from 0)
+remote: Resolving deltas: 100% (1/1), completed with 1 local object.
+To https://github.com/BennyClemmens/cicd-sample-app-24-25.git
+   8f935ba..840c258  main -> main
+```
+
 3. In the Jenkins dashboard, launch the build pipeline.
+
+`the Jenkinsfile (and setup for pipeline) offcourse had to be constructed differntly`
+
+```bash
+Step 3: Configure Jenkins to Use the Jenkinsfile
+Open Jenkins: Navigate to your Jenkins instance.
+
+Create a New Pipeline Job:
+
+Click on "New Item."
+Select "Pipeline" and give it a name.
+Configure the Pipeline:
+
+In the job configuration, under the "Pipeline" section, set "Definition" to "Pipeline script from SCM."
+Choose "Git" as the SCM.
+Provide your repository URL and credentials if necessary.
+In the "Script Path" field, enter Jenkinsfile.
+Save the Configuration: Click "Save" to create the job.
+```
+
+```bash
+pipeline {
+    agent any
+
+    stages {
+        stage('Preparation') {
+            steps {
+                catchError(buildResult: 'SUCCESS') {
+                    sh 'docker stop samplerunning || true'
+                    sh 'docker rm samplerunning || true'
+                }
+            }
+        }
+        stage('Build') {
+            steps {
+                build 'BuildSampleApp'
+            }
+        }
+        stage('Results') {
+            steps {
+                build 'TestSampleApp'
+            }
+        }
+    }
+}
+```
+
+![023_correctpipegit](img/023_correctpipegit.PNG)
+
 4. Reload the application in the web browser, it should have a different background colour now!
 
 ## Reflection
