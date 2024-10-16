@@ -1515,7 +1515,54 @@ In the next step, we will set up a complete build pipeline that, if the build an
 
     Be sure to enter the correct names of the jobs if you have chosen your own names! Finally, save the pipeline.
 3. Next, start a build. Jenkins will show you how each phase of the pipeline progresses. Check the console output of each phase.
+
+![021_pipeline](img/021_pipeline.PNG)
+
+```bash
+Started by user admin
+[Pipeline] Start of Pipeline
+[Pipeline] node
+Running on Jenkins in /var/jenkins_home/workspace/SampleAppPipeline
+[Pipeline] {
+[Pipeline] stage
+[Pipeline] { (Preparation)
+[Pipeline] catchError
+[Pipeline] {
+[Pipeline] sh
++ docker stop samplerunning
+samplerunning
+[Pipeline] sh
++ docker rm samplerunning
+samplerunning
+[Pipeline] }
+[Pipeline] // catchError
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Build)
+[Pipeline] build (Building BuildSampleApp)
+Scheduling project: BuildSampleApp
+Starting building: BuildSampleApp #5
+Build BuildSampleApp #5 completed: SUCCESS
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Results)
+[Pipeline] build (Building TestSampleApp)
+Scheduling project: TestSampleApp
+Starting building: TestSampleApp #4
+Build TestSampleApp #4 completed: SUCCESS
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] }
+[Pipeline] // node
+[Pipeline] End of Pipeline
+Finished: SUCCESS
+```
+
 4. If the run succeeds, the application should be running. Verify by opening it in a web browser.
+
+`Here no error for trying to stop a non running container ....`
 
 ```bash
 root@36be1f2a5a27:/var/jenkins_home/workspace/SampleAppPipeline# docker ps
@@ -1536,6 +1583,50 @@ fcaac994842a   portainer/portainer-ce   "/portainer"             47 hours ago   
 ## 1.7 Use a Jenkinsfile
 
 You can automate the configuration of the build pipeline by adding a `Jenkinsfile` to the root of the application Git repository. For this case, you can use the code for the the pipeline definition in the previous step. Add the jenkinsfile to the root of the Git repository, remove the pipeline from the Jenkins dashboard, create a new pipeline for the Git repository and launch it. The pipeline should run as before!
+
+```bash
+PS C:\DATA\GIT\IA\cicd-sample-app-24-25> cat .\Jenkinsfile
+node {
+    stage('Preparation') {
+        catchError(buildResult: 'SUCCESS') {
+            sh 'docker stop samplerunning'
+            sh 'docker rm samplerunning'
+        }
+    }
+    stage('Build') {
+        build 'BuildSampleApp'
+    }
+    stage('Results') {
+        build 'TestSampleApp'
+    }
+}
+PS C:\DATA\GIT\IA\cicd-sample-app-24-25> git status
+On branch main
+Your branch is up to date with 'origin/main'.
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+        Jenkinsfile
+
+nothing added to commit but untracked files present (use "git add" to track)
+PS C:\DATA\GIT\IA\cicd-sample-app-24-25> git add .
+PS C:\DATA\GIT\IA\cicd-sample-app-24-25> git commit -m 'added Jenkinsfile'
+[main 8f935ba] added Jenkinsfile
+ 1 file changed, 14 insertions(+)
+ create mode 100644 Jenkinsfile
+PS C:\DATA\GIT\IA\cicd-sample-app-24-25> git push
+Enumerating objects: 4, done.
+Counting objects: 100% (4/4), done.
+Delta compression using up to 4 threads
+Compressing objects: 100% (3/3), done.
+Writing objects: 100% (3/3), 424 bytes | 424.00 KiB/s, done.
+Total 3 (delta 1), reused 0 (delta 0), pack-reused 0 (from 0)
+remote: Resolving deltas: 100% (1/1), completed with 1 local object.
+To https://github.com/BennyClemmens/cicd-sample-app-24-25.git
+   c51bd9e..8f935ba  main -> main
+```
+
+![022_pipegit](img/022_pipegit.PNG)
 
 ## 1.9 Make a change in the application
 
