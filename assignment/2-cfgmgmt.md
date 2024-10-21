@@ -18,6 +18,20 @@ A note on the naming convention used: server VMs with name starting with `srv0` 
 
 **Warning:** Sometimes students install the `vagrant-vbguest` plugin that is supposed to automatically check whether VirtualBox Guest additions are up-to-date and to install an update if they aren't. However, the base boxes we use don't have the prerequisites (C-compiler, etc.) so this will fail, resulting in the guest additions no longer working. Biggest problem with this is that the /vagrant directory is no longer mounted. In short: you should never install the `vagrant-vbguest` plugin while working on this assignment
 
+```bash
+Benny@FLAB2021 MINGW64 /c/DATA/GIT/IA/infra-labs-24-25-BennyClemmens (main)
+$ vagrant plugin list
+==> vagrant: A new version of Vagrant is available: 2.4.1 (installed version: 2.3.7)!
+==> vagrant: To upgrade visit: https://www.vagrantup.com/downloads.html
+
+vagrant-vyos (1.1.10, global)
+
+Benny@FLAB2021 MINGW64 /c/DATA/GIT/IA/infra-labs-24-25-BennyClemmens (main)
+$
+```
+
+`So there is no need for 'vagrant plugin uninstall vagrant-vbguest'`
+
 ## Learning goals
 
 - You can automate the setup of network services with a configuration management system (Ansible)
@@ -27,9 +41,9 @@ A note on the naming convention used: server VMs with name starting with `srv0` 
 
 - You should be able to reconstruct the entire setup (except the VMs for the router and workstation) from scratch by executing the command `vagrant up`, without any manual configuration afterwards.
 - When connecting a workstation VM to the network, it should:
-    - get correct IP settings;
-    - be able to view the local website using the hostname, not the IP address (also verify that you have installed a custom SSL certificate);
-    - have internet access.
+  - get correct IP settings;
+  - be able to view the local website using the hostname, not the IP address (also verify that you have installed a custom SSL certificate);
+  - have internet access.
 - You should be able to ping the hosts in the network by host name (rather than IP address) from the workstation VM.
 
 ## 2.1. Set up the control node
