@@ -2034,6 +2034,16 @@ Edit `ansible/site.yml` and add the following:
     - bertvv.rh-base
 ```
 
+```bash
+[vagrant@control ~]$ cat /vagrant/ansible/site.yml
+# site.yml
+---
+- name: Configure srv100 # Each task should have a name
+  hosts: srv100          # Indicates hosts this applies to (host or group name)
+  roles:                 # Enumerate roles to be applied
+    - bertvv.rh-base
+```
+
 The role [bertvv.rh-base](https://galaxy.ansible.com/ui/standalone/roles/bertvv/rh-base/) is one that is published on [Ansible Galaxy](https://galaxy.ansible.com/), a public repository of Ansible roles. It does some basic configuration tasks for improving security (like enabling SELinux and starting the firewall) and allows the user to specify some desired configuration options like packages to install, users or groups to create, etc. by initializing some role variables. See the role documentation either on Ansible Galaxy (click the Read Me button) or in the role's [public GitHub repository](https://github.com/bertvv/ansible-role-rh-base). It contains an overview of all supported role variables and how to use them.
 
 In order to use this role, you should first install it with the command:
@@ -2042,9 +2052,28 @@ In order to use this role, you should first install it with the command:
 ansible-galaxy install bertvv.rh-base
 ```
 
-This will download the role and put it in the correct directory (which one?) so Ansible can make use of it. You will add more roles later, so it's a good idea to have a way install them all at once. This can be done by creating a file `ansible/requirements.yml` with the following contents:
+This will download the role and put it in the correct directory (which one?) so Ansible can make use of it.
+
+```bash
+Starting galaxy role install process
+- downloading role 'rh-base', owned by bertvv
+- downloading role from https://github.com/bertvv/ansible-role-rh-base/archive/v4.0.4.tar.gz
+- extracting bertvv.rh-base to /home/vagrant/.ansible/roles/bertvv.rh-base
+- bertvv.rh-base (v4.0.4) was installed successfully
+[vagrant@control ~]$ ls /home/vagrant/.ansible/roles/bertvv.rh-base/
+CHANGELOG.md  defaults  files  handlers  LICENSE.md  meta  README.md  tasks  templates  vars
+```
+
+You will add more roles later, so it's a good idea to have a way install them all at once. This can be done by creating a file `ansible/requirements.yml` with the following contents:
 
 ```yaml
+---
+roles:
+  - name: bertvv.rh-base
+```
+
+```bash
+[vagrant@control ~]$ cat /vagrant/ansible/requirements.yml
 ---
 roles:
   - name: bertvv.rh-base
@@ -2056,7 +2085,21 @@ You can install all roles listed in this file with the command:
 ansible-galaxy install -r requirements.yml
 ```
 
+```bash
+[vagrant@control ~]$ ansible-galaxy install -r /vagrant/ansible/requirements.yml
+Starting galaxy role install process
+[WARNING]: - bertvv.rh-base (v4.0.4) is already installed - use --force to change version to unspecified
+```
+
 Add all roles you will use in this lab assignment to this file. You can also add this command to the `vmlab/scripts/control.sh` script, so the roles are installed automatically when you create the control node!
+
+`Adding it to control.sh will be something for later, as it is an overkill in the 24-25 version where I am doing this for a second time and am setting this structure up for use in the DEVOPS project. So a not used update would be ...`
+
+```bash
+[vagrant@control ansible]$ cat /vagrant/scripts/control.sh | tail -2
+sudo --login --non-interactive --user=vagrant -- \
+  ansible-galaxy install -r /vagrant/ansible/requirements.yml
+```
 
 Next, run the `site.yml` playbook with command:
 
@@ -2064,7 +2107,182 @@ Next, run the `site.yml` playbook with command:
 ansible-playbook -i inventory.yml site.yml
 ```
 
+```bash
+[vagrant@control ~]$ ansible-playbook -i /vagrant/ansible/inventory_pk.yml /vagrant/ansible/site.yml
+
+PLAY [Configure srv100] *****************************************************************************************************************************************************
+
+TASK [Gathering Facts] ******************************************************************************************************************************************************
+ok: [srv100]
+
+TASK [bertvv.rh-base : Load distro specific variables] **********************************************************************************************************************
+ok: [srv100] => (item=/home/vagrant/.ansible/roles/bertvv.rh-base/vars/RedHat.yml)
+
+TASK [bertvv.rh-base : include_tasks] ***************************************************************************************************************************************
+included: /home/vagrant/.ansible/roles/bertvv.rh-base/tasks/install.yml for srv100
+
+TASK [bertvv.rh-base : Install | Check minimal value of ‘rhbase_repo_installonly_limit’ (>= 2)] *****************************************************************************
+ok: [srv100] => {
+    "msg": "The value of ‘rhbase_repo_installonly_limit’ should be at least 2, actual value is 3."
+}
+
+TASK [bertvv.rh-base : Install | Ensure the machine-ID is available] ********************************************************************************************************
+ok: [srv100]
+
+TASK [bertvv.rh-base : Install | Ensure basic systemd services are running] *************************************************************************************************
+ok: [srv100] => (item=systemd-journald)
+ok: [srv100] => (item=systemd-tmpfiles-setup-dev)
+ok: [srv100] => (item=systemd-tmpfiles-setup)
+
+TASK [bertvv.rh-base : Install | Role/Ansible dependencies] *****************************************************************************************************************
+ok: [srv100]
+
+TASK [bertvv.rh-base : Install | Package management configuration (dnf)] ****************************************************************************************************
+changed: [srv100]
+
+TASK [bertvv.rh-base : Install | Ensure specified external repositories are installed] **************************************************************************************
+ok: [srv100]
+
+TASK [bertvv.rh-base : Install | Ensure specified repositories are enabled] *************************************************************************************************
+skipping: [srv100]
+
+TASK [bertvv.rh-base : Install | Ensure specified packages are installed] ***************************************************************************************************
+ok: [srv100]
+
+TASK [bertvv.rh-base : Install | Ensure specified packages are NOT installed] ***********************************************************************************************
+ok: [srv100]
+
+TASK [bertvv.rh-base : Install | Ensure all updates are installed] **********************************************************************************************************
+skipping: [srv100]
+
+TASK [bertvv.rh-base : include_tasks] ***************************************************************************************************************************************
+included: /home/vagrant/.ansible/roles/bertvv.rh-base/tasks/config.yml for srv100
+
+TASK [bertvv.rh-base : Config | Ensure host name is in the hosts file] ******************************************************************************************************
+skipping: [srv100]
+
+TASK [bertvv.rh-base : Config | Install dependency for dynamic MotD] ********************************************************************************************************
+skipping: [srv100]
+
+TASK [bertvv.rh-base : Config | Install script generating dynamic MotD] *****************************************************************************************************
+skipping: [srv100]
+
+TASK [bertvv.rh-base : Config | Check if ifup-eth script overrides firewall zone] *******************************************************************************************
+ok: [srv100]
+
+TASK [bertvv.rh-base : Config | Don’t override firewall zone in ifup-eth script] ********************************************************************************************
+skipping: [srv100]
+
+TASK [bertvv.rh-base : Config | Check if ifup-post script overrides firewall zone] ******************************************************************************************
+ok: [srv100]
+
+TASK [bertvv.rh-base : Config | Don’t override firewall zone in ifup-post script] *******************************************************************************************
+skipping: [srv100]
+
+TASK [bertvv.rh-base : Config | Set the TZ environment variable] ************************************************************************************************************
+changed: [srv100]
+
+TASK [bertvv.rh-base : Config | Set protocol version for SSH] ***************************************************************************************************************
+changed: [srv100]
+
+TASK [bertvv.rh-base : Config | Set PermitEmptyPasswords] *******************************************************************************************************************
+changed: [srv100]
+
+TASK [bertvv.rh-base : Config | Set IgnoreRhosts] ***************************************************************************************************************************
+changed: [srv100]
+
+TASK [bertvv.rh-base : Config | Set HostbasedAuthentication] ****************************************************************************************************************
+changed: [srv100]
+
+TASK [bertvv.rh-base : include_tasks] ***************************************************************************************************************************************
+included: /home/vagrant/.ansible/roles/bertvv.rh-base/tasks/services.yml for srv100
+
+TASK [bertvv.rh-base : Services | Ensure SSH daemon is running] *************************************************************************************************************
+ok: [srv100]
+
+TASK [bertvv.rh-base : Services | Ensure `/var/log/journal` exists] *********************************************************************************************************
+changed: [srv100]
+
+TASK [bertvv.rh-base : Services | Ensure specified services are running] ****************************************************************************************************
+skipping: [srv100]
+
+TASK [bertvv.rh-base : Services | Ensure specified services are NOT running] ************************************************************************************************
+skipping: [srv100]
+
+TASK [bertvv.rh-base : include_tasks] ***************************************************************************************************************************************
+included: /home/vagrant/.ansible/roles/bertvv.rh-base/tasks/security.yml for srv100
+
+TASK [bertvv.rh-base : Security | Make sure SELinux has the desired state (enforcing)] **************************************************************************************
+changed: [srv100]
+
+TASK [bertvv.rh-base : Security | Enable SELinux booleans] ******************************************************************************************************************
+skipping: [srv100]
+
+TASK [bertvv.rh-base : Security | Make sure the firewall is running] ********************************************************************************************************
+changed: [srv100]
+
+TASK [bertvv.rh-base : Security | Make sure basic services can pass through firewall] ***************************************************************************************
+ok: [srv100] => (item=dhcpv6-client)
+ok: [srv100] => (item=ssh)
+
+TASK [bertvv.rh-base : Security | Make sure user specified services can pass through firewall] ******************************************************************************
+skipping: [srv100]
+
+TASK [bertvv.rh-base : Security | Make sure user specified ports can pass through firewall] *********************************************************************************
+skipping: [srv100]
+
+TASK [bertvv.rh-base : Security | Make sure specified interfaces are added] *************************************************************************************************
+skipping: [srv100]
+
+TASK [bertvv.rh-base : include_tasks] ***************************************************************************************************************************************
+included: /home/vagrant/.ansible/roles/bertvv.rh-base/tasks/users.yml for srv100
+
+TASK [bertvv.rh-base : Users | Process groups] ******************************************************************************************************************************
+skipping: [srv100]
+
+TASK [bertvv.rh-base : Users | Add groups] **********************************************************************************************************************************
+skipping: [srv100]
+
+TASK [bertvv.rh-base : Users | Add users] ***********************************************************************************************************************************
+skipping: [srv100]
+
+TASK [bertvv.rh-base : Users | Set up SSH keys] *****************************************************************************************************************************
+skipping: [srv100]
+
+TASK [bertvv.rh-base : include_tasks] ***************************************************************************************************************************************
+included: /home/vagrant/.ansible/roles/bertvv.rh-base/tasks/admin.yml for srv100
+
+TASK [bertvv.rh-base : Admin | Make sure users from the wheel group can use sudo] *******************************************************************************************
+changed: [srv100]
+
+TASK [bertvv.rh-base : Admin | Set attributes of sudo configuration file for wheel group] ***********************************************************************************
+changed: [srv100]
+
+TASK [bertvv.rh-base : Admin | Make sure only these groups can ssh] *********************************************************************************************************
+skipping: [srv100]
+
+TASK [bertvv.rh-base : include_tasks] ***************************************************************************************************************************************
+skipping: [srv100]
+
+RUNNING HANDLER [bertvv.rh-base : restart journald] *************************************************************************************************************************
+changed: [srv100]
+
+RUNNING HANDLER [bertvv.rh-base : restart sshd] *****************************************************************************************************************************
+changed: [srv100]
+
+PLAY RECAP ******************************************************************************************************************************************************************
+srv100                     : ok=32   changed=13   unreachable=0    failed=0    skipped=19   rescued=0    ignored=0
+```
+
 Watch the output and see what happens, specifically, which changes were made to the system. If the playbook ran without errors, run it again and check that this time, no changes were applied. What is the name of this property that after the first run, the operation does not change the target system anymore?
+
+`Playbooks should be idempotent. Some bash magic to not over-copy-paste.`
+
+```bash
+[vagrant@control ~]$ ansible-playbook -i /vagrant/ansible/inventory_pk.yml /vagrant/ansible/site.yml > /tmp/test.log; sed -n '/PLAY RECAP/,$p' /tmp/test.log
+PLAY RECAP *********************************************************************
+srv100                     : ok=30   changed=0    unreachable=0    failed=0    skipped=19   rescued=0    ignored=0
+```
 
 The role `bertvv.rh-base` performs several operations to configure the managed node to some desired state. It is possible to customize this desired state by setting so-called role variables. Well written roles have good documentation that explains which variables are available and how to use them. The documentation for `bertvv.rh-base` can be found on [Ansible Galaxy](https://galaxy.ansible.com/ui/standalone/roles/bertvv/rh-base/) (click on the README button) or in the role's [public GitHub repository](https://github.com/bertvv/ansible-role-rh-base).
 
@@ -2080,12 +2298,186 @@ rhbase_install_packages:
   - vim-enhanced
 ```
 
+```bash
+[vagrant@control ~]$ cat /vagrant/ansible/group_vars/servers.yml
+# /vagrant/ansible/group_vars/servers.yml
+---
+rhbase_repositories:
+  - epel-release
+rhbase_install_packages:
+  - bash-completion
+  - vim-enhanced
+```
+
+`These variables are from the bertvv.rh-base role.`
+
 These variables will result in the following changes (check the role documentation for details!):
 
 - The package repository EPEL (Extra Packages for Enterprise Linux) is installed and enabled
 - The software packages `bash-completion` and `vim-enhanced` are installed
 
 Run the playbook again to bring the VM to the new desired state. Check the output to verify the changes.
+
+```bash
+[vagrant@control ~]$ ansible-playbook -i /vagrant/ansible/inventory_pk.yml /vagrant/ansible/site.yml
+
+PLAY [Configure srv100] *****************************************************************************************************************************************************
+
+TASK [Gathering Facts] ******************************************************************************************************************************************************
+ok: [srv100]
+
+TASK [bertvv.rh-base : Load distro specific variables] **********************************************************************************************************************
+ok: [srv100] => (item=/home/vagrant/.ansible/roles/bertvv.rh-base/vars/RedHat.yml)
+
+TASK [bertvv.rh-base : include_tasks] ***************************************************************************************************************************************
+included: /home/vagrant/.ansible/roles/bertvv.rh-base/tasks/install.yml for srv100
+
+TASK [bertvv.rh-base : Install | Check minimal value of ‘rhbase_repo_installonly_limit’ (>= 2)] *****************************************************************************
+ok: [srv100] => {
+    "msg": "The value of ‘rhbase_repo_installonly_limit’ should be at least 2, actual value is 3."
+}
+
+TASK [bertvv.rh-base : Install | Ensure the machine-ID is available] ********************************************************************************************************
+ok: [srv100]
+
+TASK [bertvv.rh-base : Install | Ensure basic systemd services are running] *************************************************************************************************
+ok: [srv100] => (item=systemd-journald)
+ok: [srv100] => (item=systemd-tmpfiles-setup-dev)
+ok: [srv100] => (item=systemd-tmpfiles-setup)
+
+TASK [bertvv.rh-base : Install | Role/Ansible dependencies] *****************************************************************************************************************
+ok: [srv100]
+
+TASK [bertvv.rh-base : Install | Package management configuration (dnf)] ****************************************************************************************************
+ok: [srv100]
+
+TASK [bertvv.rh-base : Install | Ensure specified external repositories are installed] **************************************************************************************
+changed: [srv100]
+
+TASK [bertvv.rh-base : Install | Ensure specified repositories are enabled] *************************************************************************************************
+skipping: [srv100]
+
+TASK [bertvv.rh-base : Install | Ensure specified packages are installed] ***************************************************************************************************
+changed: [srv100]
+
+TASK [bertvv.rh-base : Install | Ensure specified packages are NOT installed] ***********************************************************************************************
+ok: [srv100]
+
+TASK [bertvv.rh-base : Install | Ensure all updates are installed] **********************************************************************************************************
+skipping: [srv100]
+
+TASK [bertvv.rh-base : include_tasks] ***************************************************************************************************************************************
+included: /home/vagrant/.ansible/roles/bertvv.rh-base/tasks/config.yml for srv100
+
+TASK [bertvv.rh-base : Config | Ensure host name is in the hosts file] ******************************************************************************************************
+skipping: [srv100]
+
+TASK [bertvv.rh-base : Config | Install dependency for dynamic MotD] ********************************************************************************************************
+skipping: [srv100]
+
+TASK [bertvv.rh-base : Config | Install script generating dynamic MotD] *****************************************************************************************************
+skipping: [srv100]
+
+TASK [bertvv.rh-base : Config | Check if ifup-eth script overrides firewall zone] *******************************************************************************************
+ok: [srv100]
+
+TASK [bertvv.rh-base : Config | Don’t override firewall zone in ifup-eth script] ********************************************************************************************
+skipping: [srv100]
+
+TASK [bertvv.rh-base : Config | Check if ifup-post script overrides firewall zone] ******************************************************************************************
+ok: [srv100]
+
+TASK [bertvv.rh-base : Config | Don’t override firewall zone in ifup-post script] *******************************************************************************************
+skipping: [srv100]
+
+TASK [bertvv.rh-base : Config | Set the TZ environment variable] ************************************************************************************************************
+ok: [srv100]
+
+TASK [bertvv.rh-base : Config | Set protocol version for SSH] ***************************************************************************************************************
+ok: [srv100]
+
+TASK [bertvv.rh-base : Config | Set PermitEmptyPasswords] *******************************************************************************************************************
+ok: [srv100]
+
+TASK [bertvv.rh-base : Config | Set IgnoreRhosts] ***************************************************************************************************************************
+ok: [srv100]
+
+TASK [bertvv.rh-base : Config | Set HostbasedAuthentication] ****************************************************************************************************************
+ok: [srv100]
+
+TASK [bertvv.rh-base : include_tasks] ***************************************************************************************************************************************
+included: /home/vagrant/.ansible/roles/bertvv.rh-base/tasks/services.yml for srv100
+
+TASK [bertvv.rh-base : Services | Ensure SSH daemon is running] *************************************************************************************************************
+ok: [srv100]
+
+TASK [bertvv.rh-base : Services | Ensure `/var/log/journal` exists] *********************************************************************************************************
+ok: [srv100]
+
+TASK [bertvv.rh-base : Services | Ensure specified services are running] ****************************************************************************************************
+skipping: [srv100]
+
+TASK [bertvv.rh-base : Services | Ensure specified services are NOT running] ************************************************************************************************
+skipping: [srv100]
+
+TASK [bertvv.rh-base : include_tasks] ***************************************************************************************************************************************
+included: /home/vagrant/.ansible/roles/bertvv.rh-base/tasks/security.yml for srv100
+
+TASK [bertvv.rh-base : Security | Make sure SELinux has the desired state (enforcing)] **************************************************************************************
+ok: [srv100]
+
+TASK [bertvv.rh-base : Security | Enable SELinux booleans] ******************************************************************************************************************
+skipping: [srv100]
+
+TASK [bertvv.rh-base : Security | Make sure the firewall is running] ********************************************************************************************************
+ok: [srv100]
+
+TASK [bertvv.rh-base : Security | Make sure basic services can pass through firewall] ***************************************************************************************
+ok: [srv100] => (item=dhcpv6-client)
+ok: [srv100] => (item=ssh)
+
+TASK [bertvv.rh-base : Security | Make sure user specified services can pass through firewall] ******************************************************************************
+skipping: [srv100]
+
+TASK [bertvv.rh-base : Security | Make sure user specified ports can pass through firewall] *********************************************************************************
+skipping: [srv100]
+
+TASK [bertvv.rh-base : Security | Make sure specified interfaces are added] *************************************************************************************************
+skipping: [srv100]
+
+TASK [bertvv.rh-base : include_tasks] ***************************************************************************************************************************************
+included: /home/vagrant/.ansible/roles/bertvv.rh-base/tasks/users.yml for srv100
+
+TASK [bertvv.rh-base : Users | Process groups] ******************************************************************************************************************************
+skipping: [srv100]
+
+TASK [bertvv.rh-base : Users | Add groups] **********************************************************************************************************************************
+skipping: [srv100]
+
+TASK [bertvv.rh-base : Users | Add users] ***********************************************************************************************************************************
+skipping: [srv100]
+
+TASK [bertvv.rh-base : Users | Set up SSH keys] *****************************************************************************************************************************
+skipping: [srv100]
+
+TASK [bertvv.rh-base : include_tasks] ***************************************************************************************************************************************
+included: /home/vagrant/.ansible/roles/bertvv.rh-base/tasks/admin.yml for srv100
+
+TASK [bertvv.rh-base : Admin | Make sure users from the wheel group can use sudo] *******************************************************************************************
+ok: [srv100]
+
+TASK [bertvv.rh-base : Admin | Set attributes of sudo configuration file for wheel group] ***********************************************************************************
+ok: [srv100]
+
+TASK [bertvv.rh-base : Admin | Make sure only these groups can ssh] *********************************************************************************************************
+skipping: [srv100]
+
+TASK [bertvv.rh-base : include_tasks] ***************************************************************************************************************************************
+skipping: [srv100]
+
+PLAY RECAP ******************************************************************************************************************************************************************
+srv100                     : ok=30   changed=2    unreachable=0    failed=0    skipped=19   rescued=0    ignored=0
+```
 
 Update the variable file so the following useful packages are also installed:
 
@@ -2096,11 +2488,421 @@ Update the variable file so the following useful packages are also installed:
 - tree
 - wget
 
+```bash
+# /vagrant/ansible/group_vars/servers.yml
+---
+rhbase_repositories:
+  - epel-release
+rhbase_install_packages:
+  - bash-completion
+  - vim-enhanced
+  - bind-utils
+  - git
+  - nano
+  - setroubleshoot-server
+  - tree
+  - wget
+```
+
+```bash
+[vagrant@control ~]$ ansible-playbook -i /vagrant/ansible/inventory_pk.yml /vagrant/ansible/site.yml
+
+PLAY [Configure srv100] *****************************************************************************************************************************************************
+
+TASK [Gathering Facts] ******************************************************************************************************************************************************
+ok: [srv100]
+
+TASK [bertvv.rh-base : Load distro specific variables] **********************************************************************************************************************
+ok: [srv100] => (item=/home/vagrant/.ansible/roles/bertvv.rh-base/vars/RedHat.yml)
+
+TASK [bertvv.rh-base : include_tasks] ***************************************************************************************************************************************
+included: /home/vagrant/.ansible/roles/bertvv.rh-base/tasks/install.yml for srv100
+
+TASK [bertvv.rh-base : Install | Check minimal value of ‘rhbase_repo_installonly_limit’ (>= 2)] *****************************************************************************
+ok: [srv100] => {
+    "msg": "The value of ‘rhbase_repo_installonly_limit’ should be at least 2, actual value is 3."
+}
+
+TASK [bertvv.rh-base : Install | Ensure the machine-ID is available] ********************************************************************************************************
+ok: [srv100]
+
+TASK [bertvv.rh-base : Install | Ensure basic systemd services are running] *************************************************************************************************
+ok: [srv100] => (item=systemd-journald)
+ok: [srv100] => (item=systemd-tmpfiles-setup-dev)
+ok: [srv100] => (item=systemd-tmpfiles-setup)
+
+TASK [bertvv.rh-base : Install | Role/Ansible dependencies] *****************************************************************************************************************
+ok: [srv100]
+
+TASK [bertvv.rh-base : Install | Package management configuration (dnf)] ****************************************************************************************************
+ok: [srv100]
+
+TASK [bertvv.rh-base : Install | Ensure specified external repositories are installed] **************************************************************************************
+ok: [srv100]
+
+TASK [bertvv.rh-base : Install | Ensure specified repositories are enabled] *************************************************************************************************
+skipping: [srv100]
+
+TASK [bertvv.rh-base : Install | Ensure specified packages are installed] ***************************************************************************************************
+changed: [srv100]
+
+TASK [bertvv.rh-base : Install | Ensure specified packages are NOT installed] ***********************************************************************************************
+ok: [srv100]
+
+TASK [bertvv.rh-base : Install | Ensure all updates are installed] **********************************************************************************************************
+skipping: [srv100]
+
+TASK [bertvv.rh-base : include_tasks] ***************************************************************************************************************************************
+included: /home/vagrant/.ansible/roles/bertvv.rh-base/tasks/config.yml for srv100
+
+TASK [bertvv.rh-base : Config | Ensure host name is in the hosts file] ******************************************************************************************************
+skipping: [srv100]
+
+TASK [bertvv.rh-base : Config | Install dependency for dynamic MotD] ********************************************************************************************************
+skipping: [srv100]
+
+TASK [bertvv.rh-base : Config | Install script generating dynamic MotD] *****************************************************************************************************
+skipping: [srv100]
+
+TASK [bertvv.rh-base : Config | Check if ifup-eth script overrides firewall zone] *******************************************************************************************
+ok: [srv100]
+
+TASK [bertvv.rh-base : Config | Don’t override firewall zone in ifup-eth script] ********************************************************************************************
+skipping: [srv100]
+
+TASK [bertvv.rh-base : Config | Check if ifup-post script overrides firewall zone] ******************************************************************************************
+ok: [srv100]
+
+TASK [bertvv.rh-base : Config | Don’t override firewall zone in ifup-post script] *******************************************************************************************
+skipping: [srv100]
+
+TASK [bertvv.rh-base : Config | Set the TZ environment variable] ************************************************************************************************************
+ok: [srv100]
+
+TASK [bertvv.rh-base : Config | Set protocol version for SSH] ***************************************************************************************************************
+ok: [srv100]
+
+TASK [bertvv.rh-base : Config | Set PermitEmptyPasswords] *******************************************************************************************************************
+ok: [srv100]
+
+TASK [bertvv.rh-base : Config | Set IgnoreRhosts] ***************************************************************************************************************************
+ok: [srv100]
+
+TASK [bertvv.rh-base : Config | Set HostbasedAuthentication] ****************************************************************************************************************
+ok: [srv100]
+
+TASK [bertvv.rh-base : include_tasks] ***************************************************************************************************************************************
+included: /home/vagrant/.ansible/roles/bertvv.rh-base/tasks/services.yml for srv100
+
+TASK [bertvv.rh-base : Services | Ensure SSH daemon is running] *************************************************************************************************************
+ok: [srv100]
+
+TASK [bertvv.rh-base : Services | Ensure `/var/log/journal` exists] *********************************************************************************************************
+ok: [srv100]
+
+TASK [bertvv.rh-base : Services | Ensure specified services are running] ****************************************************************************************************
+skipping: [srv100]
+
+TASK [bertvv.rh-base : Services | Ensure specified services are NOT running] ************************************************************************************************
+skipping: [srv100]
+
+TASK [bertvv.rh-base : include_tasks] ***************************************************************************************************************************************
+included: /home/vagrant/.ansible/roles/bertvv.rh-base/tasks/security.yml for srv100
+
+TASK [bertvv.rh-base : Security | Make sure SELinux has the desired state (enforcing)] **************************************************************************************
+ok: [srv100]
+
+TASK [bertvv.rh-base : Security | Enable SELinux booleans] ******************************************************************************************************************
+skipping: [srv100]
+
+TASK [bertvv.rh-base : Security | Make sure the firewall is running] ********************************************************************************************************
+ok: [srv100]
+
+TASK [bertvv.rh-base : Security | Make sure basic services can pass through firewall] ***************************************************************************************
+ok: [srv100] => (item=dhcpv6-client)
+ok: [srv100] => (item=ssh)
+
+TASK [bertvv.rh-base : Security | Make sure user specified services can pass through firewall] ******************************************************************************
+skipping: [srv100]
+
+TASK [bertvv.rh-base : Security | Make sure user specified ports can pass through firewall] *********************************************************************************
+skipping: [srv100]
+
+TASK [bertvv.rh-base : Security | Make sure specified interfaces are added] *************************************************************************************************
+skipping: [srv100]
+
+TASK [bertvv.rh-base : include_tasks] ***************************************************************************************************************************************
+included: /home/vagrant/.ansible/roles/bertvv.rh-base/tasks/users.yml for srv100
+
+TASK [bertvv.rh-base : Users | Process groups] ******************************************************************************************************************************
+skipping: [srv100]
+
+TASK [bertvv.rh-base : Users | Add groups] **********************************************************************************************************************************
+skipping: [srv100]
+
+TASK [bertvv.rh-base : Users | Add users] ***********************************************************************************************************************************
+skipping: [srv100]
+
+TASK [bertvv.rh-base : Users | Set up SSH keys] *****************************************************************************************************************************
+skipping: [srv100]
+
+TASK [bertvv.rh-base : include_tasks] ***************************************************************************************************************************************
+included: /home/vagrant/.ansible/roles/bertvv.rh-base/tasks/admin.yml for srv100
+
+TASK [bertvv.rh-base : Admin | Make sure users from the wheel group can use sudo] *******************************************************************************************
+ok: [srv100]
+
+TASK [bertvv.rh-base : Admin | Set attributes of sudo configuration file for wheel group] ***********************************************************************************
+ok: [srv100]
+
+TASK [bertvv.rh-base : Admin | Make sure only these groups can ssh] *********************************************************************************************************
+skipping: [srv100]
+
+TASK [bertvv.rh-base : include_tasks] ***************************************************************************************************************************************
+skipping: [srv100]
+
+PLAY RECAP ******************************************************************************************************************************************************************
+srv100                     : ok=30   changed=1    unreachable=0    failed=0    skipped=19   rescued=0    ignored=0
+```
+
 Create a user account for yourself (e.g. your first name, in lowercase letters) with a chosen password. Check the role documentation to see which variable you should use and the correct syntax to initialise it. This user will become an administrator of the system, which means that they should get `sudo` privileges. On a RedHat-like system like the one we're working on, this means that we should add this user to the (already existing) user group `wheel`.
+
+```bash
+[vagrant@control ~]$ openssl passwd benny
+$1$mgwL8QQE$xXSoEkguxSasIduq6ieu30
+[vagrant@control ~]$ cat /vagrant/ansible/group_vars/servers.yml
+# /vagrant/ansible/group_vars/servers.yml
+---
+rhbase_repositories:
+  - epel-release
+rhbase_install_packages:
+  - bash-completion
+  - vim-enhanced
+  - bind-utils
+  - git
+  - nano
+  - setroubleshoot-server
+  - tree
+  - wget
+rhbase_users:
+  - name: benny
+    comment: 'Benny Clemmens'
+    groups:
+      - users
+      - wheel
+    password: '$1$mgwL8QQE$xXSoEkguxSasIduq6ieu30'
+```
+
+`Since this is only available local, sharing this dummy password on the repo is not harmfull.`
 
 On your physical system, you should already have an SSH key pair (that you use for GitHub). If not, create one by executing the command `ssh-keygen` in a Bash terminal (on Mac/Linux) or Git Bash (Windows) and pressing ENTER until you're back on a shell prompt. Your home directory should contain a directory `.ssh` with a file `id_rsa.pub`. This is your public key. Open the file with a text editor (or print the contents with `cat`) and copy the text. Register this public key file in `all.yml` in the way that is specified in the role documentation. This will allow you to SSH into the VM as your own user without having to specify a password.
 
-Re-apply the role and check the changes. Verify that you can SSH into the VM with your username, without a password. Open a (Bash) shell on your physical system and execute:
+```bash
+PS C:\Users\Benny\.ssh> cat .\id_rsa.pub
+ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDFI4Qm7YeH2CZQlKcmlpj2U0zpIYT74nRpiVfWnYy9p+vjChA0lF4lZ9XSGevq+ZVHWV3RBzpmcBS5i0XrZSGbEfh6zwsYpAy7K8ErIbSepdNJkBm1jMslGO3E5gabU2tP/+TUpyfrHuuV377IrwQ3XxPOjuCPj0WOwlcFgZovtLc0ZH39ns6O8K3SVYLkho2NdgMXi4gJAlQCOj99kjA+ZT5xhOJ832w2rJn7t8XfS+fgOwoNhErv9Mq6r8c7zyE3eYKkMfk0S24jFyC66fZSu7/LERC/F4ipGGc4MyB9ODu47CAE9knRA358nuB9x4lnklVYP7twPP0iOPrgqLEcYt6fakNaniHCJxmyokINys2NqtjZNDJEBkPBWvOPoRoM555GNIsVpnsJparVmFVoCtMGCUNnvyClRBI90To1t39LMhiN8oTshU0zbuErdkln2iHX4E8czQyfcYkSNtZ0x8FPWBQxzsc/t5UR6NDLHorZTBqbXS0gHH0oxJvVL58= benny.clemmens@student.hogent.be
+```
+
+```bash
+[vagrant@control ~]$ cat /vagrant/ansible/group_vars/all.yml
+# group_vars/all.yml
+# Variables visible to all nodes
+---
+rhbase_users:
+  - ssh_key: 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDFI4Qm7YeH2CZQlKcmlpj2U0zpIYT74nRpiVfWnYy9p+vjChA0lF4lZ9XSGevq+ZVHWV3RBzpmcBS5i0XrZSGbEfh6zwsYpAy7K8ErIbSepdNJkBm1jMslGO3E5gabU2tP/+TUpyfrHuuV377IrwQ3XxPOjuCPj0WOwlcFgZovtLc0ZH39ns6O8K3SVYLkho2NdgMXi4gJAlQCOj99kjA+ZT5xhOJ832w2rJn7t8XfS+fgOwoNhErv9Mq6r8c7zyE3eYKkMfk0S24jFyC66fZSu7/LERC/F4ipGGc4MyB9ODu47CAE9knRA358nuB9x4lnklVYP7twPP0iOPrgqLEcYt6fakNaniHCJxmyokINys2NqtjZNDJEBkPBWvOPoRoM555GNIsVpnsJparVmFVoCtMGCUNnvyClRBI90To1t39LMhiN8oTshU0zbuErdkln2iHX4E8czQyfcYkSNtZ0x8FPWBQxzsc/t5UR6NDLHorZTBqbXS0gHH0oxJvVL58= benny.clemmens@student.hogent.be'
+```
+
+`This did not work, this did:`
+
+```bash
+[vagrant@control ~]$ cat /vagrant/ansible/group_vars/servers.yml
+# /vagrant/ansible/group_vars/servers.yml
+---
+rhbase_repositories:
+  - epel-release
+rhbase_install_packages:
+  - bash-completion
+  - vim-enhanced
+  - bind-utils
+  - git
+  - nano
+  - setroubleshoot-server
+  - tree
+  - wget
+rhbase_users:
+  - name: benny
+    comment: 'Benny Clemmens'
+    groups:
+      - users
+      - wheel
+    password: '$1$mgwL8QQE$xXSoEkguxSasIduq6ieu30'
+    ssh_key: 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDFI4Qm7YeH2CZQlKcmlpj2U0zpIYT74nRpiVfWnYy9p+vjChA0lF4lZ9XSGevq+ZVHWV3RBzpmcBS5i0XrZSGbEfh6zwsYpAy7K8ErIbSepdNJkBm1jMslGO3E5gabU2tP/+TUpyfrHuuV377IrwQ3XxPOjuCPj0WOwlcFgZovtLc0ZH39ns6O8K3SVYLkho2NdgMXi4gJAlQCOj99kjA+ZT5xhOJ832w2rJn7t8XfS+fgOwoNhErv9Mq6r8c7zyE3eYKkMfk0S24jFyC66fZSu7/LERC/F4ipGGc4MyB9ODu47CAE9knRA358nuB9x4lnklVYP7twPP0iOPrgqLEcYt6fakNaniHCJxmyokINys2NqtjZNDJEBkPBWvOPoRoM555GNIsVpnsJparVmFVoCtMGCUNnvyClRBI90To1t39LMhiN8oTshU0zbuErdkln2iHX4E8czQyfcYkSNtZ0x8FPWBQxzsc/t5UR6NDLHorZTBqbXS0gHH0oxJvVL58= benny.clemmens@student.hogent.be'
+```
+
+Re-apply the role and check the changes.
+
+```bash
+[vagrant@control ~]$ ansible-playbook -i /vagrant/ansible/inventory_pk.yml /vagrant/ansible/site.yml
+
+PLAY [Configure srv100] *****************************************************************************************************************************************************
+
+TASK [Gathering Facts] ******************************************************************************************************************************************************
+ok: [srv100]
+
+TASK [bertvv.rh-base : Load distro specific variables] **********************************************************************************************************************
+ok: [srv100] => (item=/home/vagrant/.ansible/roles/bertvv.rh-base/vars/RedHat.yml)
+
+TASK [bertvv.rh-base : include_tasks] ***************************************************************************************************************************************
+included: /home/vagrant/.ansible/roles/bertvv.rh-base/tasks/install.yml for srv100
+
+TASK [bertvv.rh-base : Install | Check minimal value of ‘rhbase_repo_installonly_limit’ (>= 2)] *****************************************************************************
+ok: [srv100] => {
+    "msg": "The value of ‘rhbase_repo_installonly_limit’ should be at least 2, actual value is 3."
+}
+
+TASK [bertvv.rh-base : Install | Ensure the machine-ID is available] ********************************************************************************************************
+ok: [srv100]
+
+TASK [bertvv.rh-base : Install | Ensure basic systemd services are running] *************************************************************************************************
+ok: [srv100] => (item=systemd-journald)
+ok: [srv100] => (item=systemd-tmpfiles-setup-dev)
+ok: [srv100] => (item=systemd-tmpfiles-setup)
+
+TASK [bertvv.rh-base : Install | Role/Ansible dependencies] *****************************************************************************************************************
+ok: [srv100]
+
+TASK [bertvv.rh-base : Install | Package management configuration (dnf)] ****************************************************************************************************
+ok: [srv100]
+
+TASK [bertvv.rh-base : Install | Ensure specified external repositories are installed] **************************************************************************************
+ok: [srv100]
+
+TASK [bertvv.rh-base : Install | Ensure specified repositories are enabled] *************************************************************************************************
+skipping: [srv100]
+
+TASK [bertvv.rh-base : Install | Ensure specified packages are installed] ***************************************************************************************************
+ok: [srv100]
+
+TASK [bertvv.rh-base : Install | Ensure specified packages are NOT installed] ***********************************************************************************************
+ok: [srv100]
+
+TASK [bertvv.rh-base : Install | Ensure all updates are installed] **********************************************************************************************************
+skipping: [srv100]
+
+TASK [bertvv.rh-base : include_tasks] ***************************************************************************************************************************************
+included: /home/vagrant/.ansible/roles/bertvv.rh-base/tasks/config.yml for srv100
+
+TASK [bertvv.rh-base : Config | Ensure host name is in the hosts file] ******************************************************************************************************
+skipping: [srv100]
+
+TASK [bertvv.rh-base : Config | Install dependency for dynamic MotD] ********************************************************************************************************
+skipping: [srv100]
+
+TASK [bertvv.rh-base : Config | Install script generating dynamic MotD] *****************************************************************************************************
+skipping: [srv100]
+
+TASK [bertvv.rh-base : Config | Check if ifup-eth script overrides firewall zone] *******************************************************************************************
+ok: [srv100]
+
+TASK [bertvv.rh-base : Config | Don’t override firewall zone in ifup-eth script] ********************************************************************************************
+skipping: [srv100]
+
+TASK [bertvv.rh-base : Config | Check if ifup-post script overrides firewall zone] ******************************************************************************************
+ok: [srv100]
+
+TASK [bertvv.rh-base : Config | Don’t override firewall zone in ifup-post script] *******************************************************************************************
+skipping: [srv100]
+
+TASK [bertvv.rh-base : Config | Set the TZ environment variable] ************************************************************************************************************
+ok: [srv100]
+
+TASK [bertvv.rh-base : Config | Set protocol version for SSH] ***************************************************************************************************************
+ok: [srv100]
+
+TASK [bertvv.rh-base : Config | Set PermitEmptyPasswords] *******************************************************************************************************************
+ok: [srv100]
+
+TASK [bertvv.rh-base : Config | Set IgnoreRhosts] ***************************************************************************************************************************
+ok: [srv100]
+
+TASK [bertvv.rh-base : Config | Set HostbasedAuthentication] ****************************************************************************************************************
+ok: [srv100]
+
+TASK [bertvv.rh-base : include_tasks] ***************************************************************************************************************************************
+included: /home/vagrant/.ansible/roles/bertvv.rh-base/tasks/services.yml for srv100
+
+TASK [bertvv.rh-base : Services | Ensure SSH daemon is running] *************************************************************************************************************
+ok: [srv100]
+
+TASK [bertvv.rh-base : Services | Ensure `/var/log/journal` exists] *********************************************************************************************************
+ok: [srv100]
+
+TASK [bertvv.rh-base : Services | Ensure specified services are running] ****************************************************************************************************
+skipping: [srv100]
+
+TASK [bertvv.rh-base : Services | Ensure specified services are NOT running] ************************************************************************************************
+skipping: [srv100]
+
+TASK [bertvv.rh-base : include_tasks] ***************************************************************************************************************************************
+included: /home/vagrant/.ansible/roles/bertvv.rh-base/tasks/security.yml for srv100
+
+TASK [bertvv.rh-base : Security | Make sure SELinux has the desired state (enforcing)] **************************************************************************************
+ok: [srv100]
+
+TASK [bertvv.rh-base : Security | Enable SELinux booleans] ******************************************************************************************************************
+skipping: [srv100]
+
+TASK [bertvv.rh-base : Security | Make sure the firewall is running] ********************************************************************************************************
+ok: [srv100]
+
+TASK [bertvv.rh-base : Security | Make sure basic services can pass through firewall] ***************************************************************************************
+ok: [srv100] => (item=dhcpv6-client)
+ok: [srv100] => (item=ssh)
+
+TASK [bertvv.rh-base : Security | Make sure user specified services can pass through firewall] ******************************************************************************
+skipping: [srv100]
+
+TASK [bertvv.rh-base : Security | Make sure user specified ports can pass through firewall] *********************************************************************************
+skipping: [srv100]
+
+TASK [bertvv.rh-base : Security | Make sure specified interfaces are added] *************************************************************************************************
+skipping: [srv100]
+
+TASK [bertvv.rh-base : include_tasks] ***************************************************************************************************************************************
+included: /home/vagrant/.ansible/roles/bertvv.rh-base/tasks/users.yml for srv100
+
+TASK [bertvv.rh-base : Users | Process groups] ******************************************************************************************************************************
+ok: [srv100] => (item={'name': 'benny', 'comment': 'Benny Clemmens', 'groups': ['users', 'wheel'], 'password': '$1$mgwL8QQE$xXSoEkguxSasIduq6ieu30', 'ssh_key': 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDFI4Qm7YeH2CZQlKcmlpj2U0zpIYT74nRpiVfWnYy9p+vjChA0lF4lZ9XSGevq+ZVHWV3RBzpmcBS5i0XrZSGbEfh6zwsYpAy7K8ErIbSepdNJkBm1jMslGO3E5gabU2tP/+TUpyfrHuuV377IrwQ3XxPOjuCPj0WOwlcFgZovtLc0ZH39ns6O8K3SVYLkho2NdgMXi4gJAlQCOj99kjA+ZT5xhOJ832w2rJn7t8XfS+fgOwoNhErv9Mq6r8c7zyE3eYKkMfk0S24jFyC66fZSu7/LERC/F4ipGGc4MyB9ODu47CAE9knRA358nuB9x4lnklVYP7twPP0iOPrgqLEcYt6fakNaniHCJxmyokINys2NqtjZNDJEBkPBWvOPoRoM555GNIsVpnsJparVmFVoCtMGCUNnvyClRBI90To1t39LMhiN8oTshU0zbuErdkln2iHX4E8czQyfcYkSNtZ0x8FPWBQxzsc/t5UR6NDLHorZTBqbXS0gHH0oxJvVL58= benny.clemmens@student.hogent.be'})
+
+TASK [bertvv.rh-base : Users | Add groups] **********************************************************************************************************************************
+ok: [srv100] => (item=users)
+ok: [srv100] => (item=wheel)
+
+TASK [bertvv.rh-base : Users | Add users] ***********************************************************************************************************************************
+ok: [srv100] => (item={'name': 'benny', 'comment': 'Benny Clemmens', 'groups': ['users', 'wheel'], 'password': '$1$mgwL8QQE$xXSoEkguxSasIduq6ieu30', 'ssh_key': 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDFI4Qm7YeH2CZQlKcmlpj2U0zpIYT74nRpiVfWnYy9p+vjChA0lF4lZ9XSGevq+ZVHWV3RBzpmcBS5i0XrZSGbEfh6zwsYpAy7K8ErIbSepdNJkBm1jMslGO3E5gabU2tP/+TUpyfrHuuV377IrwQ3XxPOjuCPj0WOwlcFgZovtLc0ZH39ns6O8K3SVYLkho2NdgMXi4gJAlQCOj99kjA+ZT5xhOJ832w2rJn7t8XfS+fgOwoNhErv9Mq6r8c7zyE3eYKkMfk0S24jFyC66fZSu7/LERC/F4ipGGc4MyB9ODu47CAE9knRA358nuB9x4lnklVYP7twPP0iOPrgqLEcYt6fakNaniHCJxmyokINys2NqtjZNDJEBkPBWvOPoRoM555GNIsVpnsJparVmFVoCtMGCUNnvyClRBI90To1t39LMhiN8oTshU0zbuErdkln2iHX4E8czQyfcYkSNtZ0x8FPWBQxzsc/t5UR6NDLHorZTBqbXS0gHH0oxJvVL58= benny.clemmens@student.hogent.be'})
+
+TASK [bertvv.rh-base : Users | Set up SSH keys] *****************************************************************************************************************************
+changed: [srv100] => (item={'name': 'benny', 'comment': 'Benny Clemmens', 'groups': ['users', 'wheel'], 'password': '$1$mgwL8QQE$xXSoEkguxSasIduq6ieu30', 'ssh_key': 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDFI4Qm7YeH2CZQlKcmlpj2U0zpIYT74nRpiVfWnYy9p+vjChA0lF4lZ9XSGevq+ZVHWV3RBzpmcBS5i0XrZSGbEfh6zwsYpAy7K8ErIbSepdNJkBm1jMslGO3E5gabU2tP/+TUpyfrHuuV377IrwQ3XxPOjuCPj0WOwlcFgZovtLc0ZH39ns6O8K3SVYLkho2NdgMXi4gJAlQCOj99kjA+ZT5xhOJ832w2rJn7t8XfS+fgOwoNhErv9Mq6r8c7zyE3eYKkMfk0S24jFyC66fZSu7/LERC/F4ipGGc4MyB9ODu47CAE9knRA358nuB9x4lnklVYP7twPP0iOPrgqLEcYt6fakNaniHCJxmyokINys2NqtjZNDJEBkPBWvOPoRoM555GNIsVpnsJparVmFVoCtMGCUNnvyClRBI90To1t39LMhiN8oTshU0zbuErdkln2iHX4E8czQyfcYkSNtZ0x8FPWBQxzsc/t5UR6NDLHorZTBqbXS0gHH0oxJvVL58= benny.clemmens@student.hogent.be'})
+
+TASK [bertvv.rh-base : include_tasks] ***************************************************************************************************************************************
+included: /home/vagrant/.ansible/roles/bertvv.rh-base/tasks/admin.yml for srv100
+
+TASK [bertvv.rh-base : Admin | Make sure users from the wheel group can use sudo] *******************************************************************************************
+ok: [srv100]
+
+TASK [bertvv.rh-base : Admin | Set attributes of sudo configuration file for wheel group] ***********************************************************************************
+ok: [srv100]
+
+TASK [bertvv.rh-base : Admin | Make sure only these groups can ssh] *********************************************************************************************************
+skipping: [srv100]
+
+TASK [bertvv.rh-base : include_tasks] ***************************************************************************************************************************************
+skipping: [srv100]
+
+PLAY RECAP ******************************************************************************************************************************************************************
+srv100                     : ok=33   changed=1    unreachable=0    failed=0    skipped=16   rescued=0    ignored=0
+```
+
+Verify that you can SSH into the VM with your username, without a password. Open a (Bash) shell on your physical system and execute:
 
 ```console
 ssh USER@IP_ADDRESS
