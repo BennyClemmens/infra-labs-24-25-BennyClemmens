@@ -48,7 +48,684 @@ $
 
 ## 2.1. Set up the control node
 
-Go to the `vmlab` directory and start the Vagrant environment with `vagrant up`. Currently, the environment consists of a single VM with host name `control`. This is the **Ansible control node**. It is the machine from which you will run Ansible to configure the other VMs in the environment.    
+Go to the `vmlab` directory and start the Vagrant environment with `vagrant up`. Currently, the environment consists of a single VM with host name `control`. This is the **Ansible control node**. It is the machine from which you will run Ansible to configure the other VMs in the environment.
+
+```bash
+Benny@FLAB2021 MINGW64 /c/DATA/GIT/IA/infra-labs-24-25-BennyClemmens/vmlab (main)
+$ vagrant status
+Current machine states:
+
+control                   not created (virtualbox)
+
+The environment has not yet been created. Run `vagrant up` to
+create the environment. If a machine is not created, only the
+default provider will be shown. So if a provider is not listed,
+then the machine is not created for that environment.
+
+Benny@FLAB2021 MINGW64 /c/DATA/GIT/IA/infra-labs-24-25-BennyClemmens/vmlab (main)
+$ vagrant up
+Bringing machine 'control' up with 'virtualbox' provider...
+==> control: Importing base box 'bento/almalinux-9'...
+==> control: Matching MAC address for NAT networking...
+==> control: Checking if box 'bento/almalinux-9' version '202206.14.0' is up to date...
+==> control: A newer version of the box 'bento/almalinux-9' for provider 'virtualbox' is
+==> control: available! You currently have version '202206.14.0'. The latest is version
+==> control: '202407.22.0'. Run `vagrant box update` to update.
+==> control: Setting the name of the VM: vmlab_control_1729494434642_49984
+==> control: Clearing any previously set network interfaces...
+==> control: Preparing network interfaces based on configuration...
+    control: Adapter 1: nat
+    control: Adapter 2: hostonly
+==> control: Forwarding ports...
+    control: 22 (guest) => 2222 (host) (adapter 1)
+==> control: Running 'pre-boot' VM customizations...
+==> control: Booting VM...
+==> control: Waiting for machine to boot. This may take a few minutes...
+    control: SSH address: 127.0.0.1:2222
+    control: SSH username: vagrant
+    control: SSH auth method: private key
+    control:
+    control: Vagrant insecure key detected. Vagrant will automatically replace
+    control: this with a newly generated keypair for better security.
+    control:
+    control: Inserting generated public key within guest...
+    control: Removing insecure key from the guest if it's present...
+    control: Key inserted! Disconnecting and reconnecting using new SSH key...
+==> control: Machine booted and ready!
+==> control: Checking for guest additions in VM...
+    control: The guest additions on this VM do not match the installed version of
+    control: VirtualBox! In most cases this is fine, but in rare cases it can
+    control: prevent things such as shared folders from working properly. If you see
+    control: shared folder errors, please make sure the guest additions within the
+    control: virtual machine match the version of VirtualBox you have installed on
+    control: your host and reload your VM.
+    control:
+    control: Guest Additions Version: 6.1.34
+    control: VirtualBox Version: 7.0
+==> control: Setting hostname...
+==> control: Configuring and enabling network interfaces...
+==> control: Mounting shared folders...
+    control: /vagrant => C:/DATA/GIT/IA/infra-labs-24-25-BennyClemmens/vmlab
+==> control: Running provisioner: shell...
+    control: Running: C:/Users/Benny/AppData/Local/Temp/vagrant-shell20241021-9904-reklji.sh
+    control: [LOG]  Starting server specific provisioning tasks on host control
+    control: [LOG]  Installing Ansible and dependencies
+    control: AlmaLinux 9 - AppStream                         3.6 MB/s |  15 MB     00:04
+    control: AlmaLinux 9 - BaseOS                            8.3 MB/s |  15 MB     00:01
+    control: AlmaLinux 9 - Extras                             33 kB/s |  20 kB     00:00
+    control: Dependencies resolved.
+    control: ================================================================================
+    control:  Package               Architecture    Version            Repository       Size
+    control: ================================================================================
+    control: Installing:
+    control:  epel-release          noarch          9-5.el9            extras           18 k
+    control:
+    control: Transaction Summary
+    control: ================================================================================
+    control: Install  1 Package
+    control:
+    control: Total download size: 18 k
+    control: Installed size: 25 k
+    control: Downloading Packages:
+    control: epel-release-9-5.el9.noarch.rpm                 176 kB/s |  18 kB     00:00
+    control: --------------------------------------------------------------------------------
+    control: Total                                            34 kB/s |  18 kB     00:00
+    control: Running transaction check
+    control: Transaction check succeeded.
+    control: Running transaction test
+    control: Transaction test succeeded.
+    control: Running transaction
+    control:   Preparing        :                                                        1/1
+    control:   Installing       : epel-release-9-5.el9.noarch                            1/1
+    control:   Running scriptlet: epel-release-9-5.el9.noarch                            1/1
+    control: Many EPEL packages require the CodeReady Builder (CRB) repository.
+    control: It is recommended that you run /usr/bin/crb enable to enable the CRB repository.
+    control:
+    control:   Verifying        : epel-release-9-5.el9.noarch                            1/1
+    control:
+    control: Installed:
+    control:   epel-release-9-5.el9.noarch
+    control:
+    control: Complete!
+    control: Extra Packages for Enterprise Linux 9 - x86_64  5.9 MB/s |  23 MB     00:03
+    control: Last metadata expiration check: 0:00:02 ago on Mon 21 Oct 2024 07:08:13 AM UTC.
+    control: Package psmisc-23.4-3.el9.x86_64 is already installed.
+    control: Package python3-libselinux-3.3-2.el9.x86_64 is already installed.
+    control: Package python3-libsemanage-3.3-2.el9.x86_64 is already installed.
+    control: Dependencies resolved.
+    control: ================================================================================
+    control:  Package                     Arch    Version                   Repository  Size
+    control: ================================================================================
+    control: Installing:
+    control:  bash-completion             noarch  1:2.11-5.el9              baseos     291 k
+    control:  bats                        noarch  1.8.0-1.el9               epel        54 k
+    control:  bind-utils                  x86_64  32:9.16.23-18.el9_4.6     appstream  201 k
+    control:  mc                          x86_64  1:4.8.26-5.el9            appstream  1.9 M
+    control:  python3-PyMySQL             noarch  0.10.1-6.el9              appstream   93 k
+    control:  python3-netaddr             noarch  0.8.0-5.el9               appstream  1.5 M
+    control:  python3-pip                 noarch  21.2.3-8.el9              appstream  1.7 M
+    control:  sshpass                     x86_64  1.09-4.el9                appstream   27 k
+    control:  tree                        x86_64  1.8.0-10.el9              baseos      55 k
+    control:  vim-enhanced                x86_64  2:8.2.2637-20.el9_1       appstream  1.8 M
+    control: Upgrading:
+    control:  libselinux                  x86_64  3.6-1.el9                 baseos      85 k
+    control:  libselinux-utils            x86_64  3.6-1.el9                 baseos     161 k
+    control:  libsemanage                 x86_64  3.6-1.el9                 baseos     117 k
+    control:  libsepol                    x86_64  3.6-1.el9                 baseos     329 k
+    control:  python-unversioned-command  noarch  3.9.18-3.el9_4.5          appstream  8.5 k
+    control:  python3                     x86_64  3.9.18-3.el9_4.5          baseos      25 k
+    control:  python3-libs                x86_64  3.9.18-3.el9_4.5          baseos     7.3 M
+    control:  python3-libselinux          x86_64  3.6-1.el9                 appstream  186 k
+    control:  python3-libsemanage         x86_64  3.6-1.el9                 appstream   78 k
+    control: Installing dependencies:
+    control:  bind-libs                   x86_64  32:9.16.23-18.el9_4.6     appstream  1.2 M
+    control:  bind-license                noarch  32:9.16.23-18.el9_4.6     appstream   12 k
+    control:  fstrm                       x86_64  0.6.1-3.el9               appstream   27 k
+    control:  gpm-libs                    x86_64  1.20.7-29.el9             appstream   20 k
+    control:  libmaxminddb                x86_64  1.5.2-3.el9               appstream   33 k
+    control:  libpkgconf                  x86_64  1.7.3-10.el9              baseos      35 k
+    control:  libuv                       x86_64  1:1.42.0-2.el9_4          appstream  146 k
+    control:  parallel                    noarch  20240922-2.el9            epel       428 k
+    control:  perl-AutoLoader             noarch  5.74-481.el9              appstream   20 k
+    control:  perl-B                      x86_64  1.80-481.el9              appstream  178 k
+    control:  perl-Carp                   noarch  1.50-460.el9              appstream   29 k
+    control:  perl-Class-Struct           noarch  0.66-481.el9              appstream   21 k
+    control:  perl-Data-Dumper            x86_64  2.174-462.el9             appstream   55 k
+    control:  perl-Digest                 noarch  1.19-4.el9                appstream   25 k
+    control:  perl-Digest-MD5             x86_64  2.58-4.el9                appstream   36 k
+    control:  perl-Encode                 x86_64  4:3.08-462.el9            appstream  1.7 M
+    control:  perl-Errno                  x86_64  1.30-481.el9              appstream   13 k
+    control:  perl-Exporter               noarch  5.74-461.el9              appstream   31 k
+    control:  perl-Fcntl                  x86_64  1.13-481.el9              appstream   19 k
+    control:  perl-File-Basename          noarch  2.85-481.el9              appstream   16 k
+    control:  perl-File-Path              noarch  2.18-4.el9                appstream   35 k
+    control:  perl-File-Temp              noarch  1:0.231.100-4.el9         appstream   59 k
+    control:  perl-File-stat              noarch  1.09-481.el9              appstream   16 k
+    control:  perl-FileHandle             noarch  2.03-481.el9              appstream   14 k
+    control:  perl-Getopt-Long            noarch  1:2.52-4.el9              appstream   59 k
+    control:  perl-Getopt-Std             noarch  1.12-481.el9              appstream   14 k
+    control:  perl-HTTP-Tiny              noarch  0.076-462.el9             appstream   53 k
+    control:  perl-IO                     x86_64  1.43-481.el9              appstream   85 k
+    control:  perl-IO-Socket-IP           noarch  0.41-5.el9                appstream   42 k
+    control:  perl-IO-Socket-SSL          noarch  2.073-1.el9               appstream  216 k
+    control:  perl-IPC-Open3              noarch  1.21-481.el9              appstream   21 k
+    control:  perl-MIME-Base64            x86_64  3.16-4.el9                appstream   30 k
+    control:  perl-Mozilla-CA             noarch  20200520-6.el9            appstream   12 k
+    control:  perl-Net-SSLeay             x86_64  1.92-2.el9                appstream  364 k
+    control:  perl-POSIX                  x86_64  1.94-481.el9              appstream   95 k
+    control:  perl-PathTools              x86_64  3.78-461.el9              appstream   85 k
+    control:  perl-Pod-Escapes            noarch  1:1.07-460.el9            appstream   20 k
+    control:  perl-Pod-Perldoc            noarch  3.28.01-461.el9           appstream   83 k
+    control:  perl-Pod-Simple             noarch  1:3.42-4.el9              appstream  215 k
+    control:  perl-Pod-Usage              noarch  4:2.01-4.el9              appstream   40 k
+    control:  perl-Scalar-List-Utils      x86_64  4:1.56-461.el9            appstream   71 k
+    control:  perl-SelectSaver            noarch  1.02-481.el9              appstream   10 k
+    control:  perl-Socket                 x86_64  4:2.031-4.el9             appstream   54 k
+    control:  perl-Storable               x86_64  1:3.21-460.el9            appstream   95 k
+    control:  perl-Symbol                 noarch  1.08-481.el9              appstream   13 k
+    control:  perl-Term-ANSIColor         noarch  5.01-461.el9              appstream   48 k
+    control:  perl-Term-Cap               noarch  1.17-460.el9              appstream   22 k
+    control:  perl-Text-ParseWords        noarch  3.30-460.el9              appstream   16 k
+    control:  perl-Text-Tabs+Wrap         noarch  2013.0523-460.el9         appstream   22 k
+    control:  perl-Thread-Queue           noarch  3.14-460.el9              appstream   21 k
+    control:  perl-Time-Local             noarch  2:1.300-7.el9             appstream   33 k
+    control:  perl-URI                    noarch  5.09-3.el9                appstream  108 k
+    control:  perl-base                   noarch  2.27-481.el9              appstream   15 k
+    control:  perl-constant               noarch  1.33-461.el9              appstream   23 k
+    control:  perl-if                     noarch  0.60.800-481.el9          appstream   12 k
+    control:  perl-interpreter            x86_64  4:5.32.1-481.el9          appstream   69 k
+    control:  perl-libnet                 noarch  3.13-4.el9                appstream  125 k
+    control:  perl-libs                   x86_64  4:5.32.1-481.el9          appstream  2.0 M
+    control:  perl-mro                    x86_64  1.23-481.el9              appstream   27 k
+    control:  perl-overload               noarch  1.31-481.el9              appstream   44 k
+    control:  perl-overloading            noarch  0.02-481.el9              appstream   11 k
+    control:  perl-parent                 noarch  1:0.238-460.el9           appstream   14 k
+    control:  perl-podlators              noarch  1:4.14-460.el9            appstream  111 k
+    control:  perl-subs                   noarch  1.03-481.el9              appstream   10 k
+    control:  perl-threads                x86_64  1:2.25-460.el9            appstream   57 k
+    control:  perl-threads-shared         x86_64  1.61-460.el9              appstream   44 k
+    control:  perl-vars                   noarch  1.05-481.el9              appstream   11 k
+    control:  pkgconf                     x86_64  1.7.3-10.el9              baseos      40 k
+    control:  pkgconf-m4                  noarch  1.7.3-10.el9              baseos      14 k
+    control:  pkgconf-pkg-config          x86_64  1.7.3-10.el9              baseos     9.9 k
+    control:  protobuf-c                  x86_64  1.3.3-13.el9              baseos      34 k
+    control:  python3-cffi                x86_64  1.14.5-5.el9              baseos     241 k
+    control:  python3-cryptography        x86_64  36.0.1-4.el9              baseos     1.1 M
+    control:  python3-ply                 noarch  3.11-14.el9               baseos     103 k
+    control:  python3-pycparser           noarch  2.20-6.el9                baseos     124 k
+    control:  vim-common                  x86_64  2:8.2.2637-20.el9_1       appstream  6.6 M
+    control:  vim-filesystem              noarch  2:8.2.2637-20.el9_1       baseos      14 k
+    control: Installing weak dependencies:
+    control:  perl-NDBM_File              x86_64  1.15-481.el9              appstream   21 k
+    control:
+    control: Transaction Summary
+    control: ================================================================================
+    control: Install  88 Packages
+    control: Upgrade   9 Packages
+    control:
+    control: Total download size: 33 M
+    control: Downloading Packages:
+    control: (1/97): bind-license-9.16.23-18.el9_4.6.noarch. 121 kB/s |  12 kB     00:00
+    control: (2/97): bind-utils-9.16.23-18.el9_4.6.x86_64.rp 1.1 MB/s | 201 kB     00:00
+    control: (3/97): fstrm-0.6.1-3.el9.x86_64.rpm            338 kB/s |  27 kB     00:00
+    control: (4/97): libmaxminddb-1.5.2-3.el9.x86_64.rpm     550 kB/s |  33 kB     00:00
+    control: (5/97): gpm-libs-1.20.7-29.el9.x86_64.rpm       282 kB/s |  20 kB     00:00
+    control: (6/97): bind-libs-9.16.23-18.el9_4.6.x86_64.rpm 4.2 MB/s | 1.2 MB     00:00
+    control: (7/97): libuv-1.42.0-2.el9_4.x86_64.rpm         2.0 MB/s | 146 kB     00:00
+    control: (8/97): perl-AutoLoader-5.74-481.el9.noarch.rpm 408 kB/s |  20 kB     00:00
+    control: (9/97): perl-B-1.80-481.el9.x86_64.rpm          3.3 MB/s | 178 kB     00:00
+    control: (10/97): perl-Carp-1.50-460.el9.noarch.rpm      420 kB/s |  29 kB     00:00
+    control: (11/97): perl-Class-Struct-0.66-481.el9.noarch. 433 kB/s |  21 kB     00:00
+    control: (12/97): perl-Data-Dumper-2.174-462.el9.x86_64. 1.1 MB/s |  55 kB     00:00
+    control: (13/97): perl-Digest-1.19-4.el9.noarch.rpm      530 kB/s |  25 kB     00:00
+    control: (14/97): mc-4.8.26-5.el9.x86_64.rpm             8.3 MB/s | 1.9 MB     00:00
+    control: (15/97): perl-Digest-MD5-2.58-4.el9.x86_64.rpm  1.1 MB/s |  36 kB     00:00
+    control: (16/97): perl-Exporter-5.74-461.el9.noarch.rpm  830 kB/s |  31 kB     00:00
+    control: (17/97): perl-Errno-1.30-481.el9.x86_64.rpm     176 kB/s |  13 kB     00:00
+    control: (18/97): perl-Fcntl-1.13-481.el9.x86_64.rpm     481 kB/s |  19 kB     00:00
+    control: (19/97): perl-File-Basename-2.85-481.el9.noarch 427 kB/s |  16 kB     00:00
+    control: (20/97): perl-File-Path-2.18-4.el9.noarch.rpm   551 kB/s |  35 kB     00:00
+    control: (21/97): perl-File-Temp-0.231.100-4.el9.noarch. 1.2 MB/s |  59 kB     00:00
+    control: (22/97): perl-File-stat-1.09-481.el9.noarch.rpm 219 kB/s |  16 kB     00:00
+    control: (23/97): perl-FileHandle-2.03-481.el9.noarch.rp 228 kB/s |  14 kB     00:00
+    control: (24/97): perl-Encode-3.08-462.el9.x86_64.rpm    6.3 MB/s | 1.7 MB     00:00
+    control: (25/97): perl-Getopt-Long-2.52-4.el9.noarch.rpm 1.8 MB/s |  59 kB     00:00
+    control: (26/97): perl-Getopt-Std-1.12-481.el9.noarch.rp 369 kB/s |  14 kB     00:00
+    control: (27/97): perl-HTTP-Tiny-0.076-462.el9.noarch.rp 1.1 MB/s |  53 kB     00:00
+    control: (28/97): perl-IO-1.43-481.el9.x86_64.rpm        1.9 MB/s |  85 kB     00:00
+    control: (29/97): perl-IO-Socket-IP-0.41-5.el9.noarch.rp 939 kB/s |  42 kB     00:00
+    control: (30/97): perl-IO-Socket-SSL-2.073-1.el9.noarch. 4.4 MB/s | 216 kB     00:00
+    control: (31/97): perl-IPC-Open3-1.21-481.el9.noarch.rpm 452 kB/s |  21 kB     00:00
+    control: (32/97): perl-MIME-Base64-3.16-4.el9.x86_64.rpm 668 kB/s |  30 kB     00:00
+    control: (33/97): perl-NDBM_File-1.15-481.el9.x86_64.rpm 817 kB/s |  21 kB     00:00
+    control: (34/97): perl-Mozilla-CA-20200520-6.el9.noarch. 344 kB/s |  12 kB     00:00
+    control: (35/97): perl-Net-SSLeay-1.92-2.el9.x86_64.rpm  5.5 MB/s | 364 kB     00:00
+    control: (36/97): perl-POSIX-1.94-481.el9.x86_64.rpm     2.0 MB/s |  95 kB     00:00
+    control: (37/97): perl-PathTools-3.78-461.el9.x86_64.rpm 1.6 MB/s |  85 kB     00:00
+    control: (38/97): perl-Pod-Escapes-1.07-460.el9.noarch.r 405 kB/s |  20 kB     00:00
+    control: (39/97): perl-Pod-Perldoc-3.28.01-461.el9.noarc 1.6 MB/s |  83 kB     00:00
+    control: (40/97): perl-Pod-Simple-3.42-4.el9.noarch.rpm  4.5 MB/s | 215 kB     00:00
+    control: (41/97): perl-Pod-Usage-2.01-4.el9.noarch.rpm   1.0 MB/s |  40 kB     00:00
+    control: (42/97): perl-Scalar-List-Utils-1.56-461.el9.x8 1.6 MB/s |  71 kB     00:00
+    control: (43/97): perl-SelectSaver-1.02-481.el9.noarch.r 259 kB/s |  10 kB     00:00
+    control: (44/97): perl-Socket-2.031-4.el9.x86_64.rpm     1.7 MB/s |  54 kB     00:00
+    control: (45/97): perl-Symbol-1.08-481.el9.noarch.rpm    458 kB/s |  13 kB     00:00
+    control: (46/97): perl-Storable-3.21-460.el9.x86_64.rpm  1.6 MB/s |  95 kB     00:00
+    control: (47/97): perl-Term-ANSIColor-5.01-461.el9.noarc 1.2 MB/s |  48 kB     00:00
+    control: (48/97): perl-Term-Cap-1.17-460.el9.noarch.rpm  623 kB/s |  22 kB     00:00
+    control: (49/97): perl-Text-ParseWords-3.30-460.el9.noar 419 kB/s |  16 kB     00:00
+    control: (50/97): perl-Text-Tabs+Wrap-2013.0523-460.el9. 580 kB/s |  22 kB     00:00
+    control: (51/97): perl-Thread-Queue-3.14-460.el9.noarch. 551 kB/s |  21 kB     00:00
+    control: (52/97): perl-Time-Local-1.300-7.el9.noarch.rpm 969 kB/s |  33 kB     00:00
+    control: (53/97): perl-base-2.27-481.el9.noarch.rpm      357 kB/s |  15 kB     00:00
+    control: (54/97): perl-constant-1.33-461.el9.noarch.rpm  807 kB/s |  23 kB     00:00
+    control: (55/97): perl-URI-5.09-3.el9.noarch.rpm         1.9 MB/s | 108 kB     00:00
+    control: (56/97): perl-if-0.60.800-481.el9.noarch.rpm    497 kB/s |  12 kB     00:00
+    control: (57/97): perl-interpreter-5.32.1-481.el9.x86_64 1.3 MB/s |  69 kB     00:00
+    control: (58/97): perl-libnet-3.13-4.el9.noarch.rpm      2.3 MB/s | 125 kB     00:00
+    control: (59/97): perl-mro-1.23-481.el9.x86_64.rpm       871 kB/s |  27 kB     00:00
+    control: (60/97): perl-overload-1.31-481.el9.noarch.rpm  914 kB/s |  44 kB     00:00
+    control: (61/97): perl-overloading-0.02-481.el9.noarch.r 208 kB/s |  11 kB     00:00
+    control: (62/97): perl-parent-0.238-460.el9.noarch.rpm   302 kB/s |  14 kB     00:00
+    control: (63/97): perl-podlators-4.14-460.el9.noarch.rpm 2.4 MB/s | 111 kB     00:00
+    control: (64/97): perl-subs-1.03-481.el9.noarch.rpm      217 kB/s |  10 kB     00:00
+    control: (65/97): perl-threads-shared-1.61-460.el9.x86_6 1.0 MB/s |  44 kB     00:00
+    control: (66/97): perl-threads-2.25-460.el9.x86_64.rpm   870 kB/s |  57 kB     00:00
+    control: (67/97): perl-vars-1.05-481.el9.noarch.rpm      342 kB/s |  11 kB     00:00
+    control: (68/97): perl-libs-5.32.1-481.el9.x86_64.rpm    7.2 MB/s | 2.0 MB     00:00
+    control: (69/97): python3-PyMySQL-0.10.1-6.el9.noarch.rp 1.9 MB/s |  93 kB     00:00
+    control: (70/97): sshpass-1.09-4.el9.x86_64.rpm          233 kB/s |  27 kB     00:00
+    control: (71/97): python3-netaddr-0.8.0-5.el9.noarch.rpm 7.6 MB/s | 1.5 MB     00:00
+    control: (72/97): python3-pip-21.2.3-8.el9.noarch.rpm    3.4 MB/s | 1.7 MB     00:00
+    control: (73/97): vim-enhanced-8.2.2637-20.el9_1.x86_64. 4.8 MB/s | 1.8 MB     00:00
+    control: (74/97): libpkgconf-1.7.3-10.el9.x86_64.rpm     688 kB/s |  35 kB     00:00
+    control: (75/97): bash-completion-2.11-5.el9.noarch.rpm  2.7 MB/s | 291 kB     00:00
+    control: (76/97): pkgconf-1.7.3-10.el9.x86_64.rpm        658 kB/s |  40 kB     00:00
+    control: (77/97): pkgconf-m4-1.7.3-10.el9.noarch.rpm     207 kB/s |  14 kB     00:00
+    control: (78/97): pkgconf-pkg-config-1.7.3-10.el9.x86_64 200 kB/s | 9.9 kB     00:00
+    control: (79/97): protobuf-c-1.3.3-13.el9.x86_64.rpm     592 kB/s |  34 kB     00:00
+    control: (80/97): python3-cffi-1.14.5-5.el9.x86_64.rpm   3.7 MB/s | 241 kB     00:00
+    control: (81/97): python3-ply-3.11-14.el9.noarch.rpm     1.4 MB/s | 103 kB     00:00
+    control: (82/97): python3-pycparser-2.20-6.el9.noarch.rp 2.4 MB/s | 124 kB     00:00
+    control: (83/97): tree-1.8.0-10.el9.x86_64.rpm           753 kB/s |  55 kB     00:00
+    control: (84/97): python3-cryptography-36.0.1-4.el9.x86_ 4.1 MB/s | 1.1 MB     00:00
+    control: (85/97): vim-filesystem-8.2.2637-20.el9_1.noarc 194 kB/s |  14 kB     00:00
+    control: (86/97): vim-common-8.2.2637-20.el9_1.x86_64.rp 5.4 MB/s | 6.6 MB     00:01
+    control: (87/97): bats-1.8.0-1.el9.noarch.rpm            163 kB/s |  54 kB     00:00
+    control: (88/97): python-unversioned-command-3.9.18-3.el 325 kB/s | 8.5 kB     00:00
+    control: (89/97): python3-libselinux-3.6-1.el9.x86_64.rp 3.5 MB/s | 186 kB     00:00
+    control: (90/97): python3-libsemanage-3.6-1.el9.x86_64.r 1.9 MB/s |  78 kB     00:00
+    control: (91/97): libselinux-3.6-1.el9.x86_64.rpm        1.8 MB/s |  85 kB     00:00
+    control: (92/97): libselinux-utils-3.6-1.el9.x86_64.rpm  3.0 MB/s | 161 kB     00:00
+    control: (93/97): libsemanage-3.6-1.el9.x86_64.rpm       2.0 MB/s | 117 kB     00:00
+    control: (94/97): libsepol-3.6-1.el9.x86_64.rpm          4.7 MB/s | 329 kB     00:00
+    control: (95/97): python3-3.9.18-3.el9_4.5.x86_64.rpm    812 kB/s |  25 kB     00:00
+    control: (96/97): parallel-20240922-2.el9.noarch.rpm     769 kB/s | 428 kB     00:00
+    control: (97/97): python3-libs-3.9.18-3.el9_4.5.x86_64.r 9.0 MB/s | 7.3 MB     00:00
+    control: --------------------------------------------------------------------------------
+    control: Total                                           6.6 MB/s |  33 MB     00:04
+    control: Extra Packages for Enterprise Linux 9 - x86_64  1.4 MB/s | 1.6 kB     00:00
+    control: Importing GPG key 0x3228467C:
+    control:  Userid     : "Fedora (epel9) <epel@fedoraproject.org>"
+    control:  Fingerprint: FF8A D134 4597 106E CE81 3B91 8A38 72BF 3228 467C
+    control:  From       : /etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-9
+    control: Key imported successfully
+    control: Running transaction check
+    control: Transaction check succeeded.
+    control: Running transaction test
+    control: Transaction test succeeded.
+    control: Running transaction
+    control:   Preparing        :                                                        1/1
+    control:   Upgrading        : libsepol-3.6-1.el9.x86_64                            1/106
+    control:   Upgrading        : libselinux-3.6-1.el9.x86_64                          2/106
+    control:   Running scriptlet: libselinux-3.6-1.el9.x86_64                          2/106
+    control:   Installing       : protobuf-c-1.3.3-13.el9.x86_64                       3/106
+    control:   Installing       : gpm-libs-1.20.7-29.el9.x86_64                        4/106
+    control:   Upgrading        : libsemanage-3.6-1.el9.x86_64                         5/106
+    control:   Upgrading        : python3-libs-3.9.18-3.el9_4.5.x86_64                 6/106
+    control:   Upgrading        : python3-3.9.18-3.el9_4.5.x86_64                      7/106
+    control:   Upgrading        : python-unversioned-command-3.9.18-3.el9_4.5.noar     8/106
+    control:   Installing       : python3-ply-3.11-14.el9.noarch                       9/106
+    control:   Installing       : python3-pycparser-2.20-6.el9.noarch                 10/106
+    control:   Installing       : python3-cffi-1.14.5-5.el9.x86_64                    11/106
+    control:   Installing       : python3-cryptography-36.0.1-4.el9.x86_64            12/106
+    control:   Upgrading        : python3-libselinux-3.6-1.el9.x86_64                 13/106
+    control:   Installing       : perl-Digest-1.19-4.el9.noarch                       14/106
+    control:   Installing       : perl-Digest-MD5-2.58-4.el9.x86_64                   15/106
+    control:   Installing       : perl-B-1.80-481.el9.x86_64                          16/106
+    control:   Installing       : perl-FileHandle-2.03-481.el9.noarch                 17/106
+    control:   Installing       : perl-Data-Dumper-2.174-462.el9.x86_64               18/106
+    control:   Installing       : perl-libnet-3.13-4.el9.noarch                       19/106
+    control:   Installing       : perl-base-2.27-481.el9.noarch                       20/106
+    control:   Installing       : perl-URI-5.09-3.el9.noarch                          21/106
+    control:   Installing       : perl-AutoLoader-5.74-481.el9.noarch                 22/106
+    control:   Installing       : perl-Mozilla-CA-20200520-6.el9.noarch               23/106
+    control:   Installing       : perl-if-0.60.800-481.el9.noarch                     24/106
+    control:   Installing       : perl-IO-Socket-IP-0.41-5.el9.noarch                 25/106
+    control:   Installing       : perl-Time-Local-2:1.300-7.el9.noarch                26/106
+    control:   Installing       : perl-File-Path-2.18-4.el9.noarch                    27/106
+    control:   Installing       : perl-Pod-Escapes-1:1.07-460.el9.noarch              28/106
+    control:   Installing       : perl-Text-Tabs+Wrap-2013.0523-460.el9.noarch        29/106
+    control:   Installing       : perl-IO-Socket-SSL-2.073-1.el9.noarch               30/106
+    control:   Installing       : perl-Net-SSLeay-1.92-2.el9.x86_64                   31/106
+    control:   Installing       : perl-Class-Struct-0.66-481.el9.noarch               32/106
+    control:   Installing       : perl-POSIX-1.94-481.el9.x86_64                      33/106
+    control:   Installing       : perl-Term-ANSIColor-5.01-461.el9.noarch             34/106
+    control:   Installing       : perl-IPC-Open3-1.21-481.el9.noarch                  35/106
+    control:   Installing       : perl-subs-1.03-481.el9.noarch                       36/106
+    control:   Installing       : perl-File-Temp-1:0.231.100-4.el9.noarch             37/106
+    control:   Installing       : perl-Term-Cap-1.17-460.el9.noarch                   38/106
+    control:   Installing       : perl-Pod-Simple-1:3.42-4.el9.noarch                 39/106
+    control:   Installing       : perl-HTTP-Tiny-0.076-462.el9.noarch                 40/106
+    control:   Installing       : perl-Socket-4:2.031-4.el9.x86_64                    41/106
+    control:   Installing       : perl-SelectSaver-1.02-481.el9.noarch                42/106
+    control:   Installing       : perl-Symbol-1.08-481.el9.noarch                     43/106
+    control:   Installing       : perl-File-stat-1.09-481.el9.noarch                  44/106
+    control:   Installing       : perl-podlators-1:4.14-460.el9.noarch                45/106
+    control:   Installing       : perl-Pod-Perldoc-3.28.01-461.el9.noarch             46/106
+    control:   Installing       : perl-Fcntl-1.13-481.el9.x86_64                      47/106
+    control:   Installing       : perl-Text-ParseWords-3.30-460.el9.noarch            48/106
+    control:   Installing       : perl-mro-1.23-481.el9.x86_64                        49/106
+    control:   Installing       : perl-IO-1.43-481.el9.x86_64                         50/106
+    control:   Installing       : perl-overloading-0.02-481.el9.noarch                51/106
+    control:   Installing       : perl-Pod-Usage-4:2.01-4.el9.noarch                  52/106
+    control:   Installing       : perl-Errno-1.30-481.el9.x86_64                      53/106
+    control:   Installing       : perl-File-Basename-2.85-481.el9.noarch              54/106
+    control:   Installing       : perl-Getopt-Std-1.12-481.el9.noarch                 55/106
+    control:   Installing       : perl-MIME-Base64-3.16-4.el9.x86_64                  56/106
+    control:   Installing       : perl-Scalar-List-Utils-4:1.56-461.el9.x86_64        57/106
+    control:   Installing       : perl-constant-1.33-461.el9.noarch                   58/106
+    control:   Installing       : perl-Storable-1:3.21-460.el9.x86_64                 59/106
+    control:   Installing       : perl-overload-1.31-481.el9.noarch                   60/106
+    control:   Installing       : perl-parent-1:0.238-460.el9.noarch                  61/106
+    control:   Installing       : perl-vars-1.05-481.el9.noarch                       62/106
+    control:   Installing       : perl-Getopt-Long-1:2.52-4.el9.noarch                63/106
+    control:   Installing       : perl-Carp-1.50-460.el9.noarch                       64/106
+    control:   Installing       : perl-Exporter-5.74-461.el9.noarch                   65/106
+    control:   Installing       : perl-NDBM_File-1.15-481.el9.x86_64                  66/106
+    control:   Installing       : perl-PathTools-3.78-461.el9.x86_64                  67/106
+    control:   Installing       : perl-Encode-4:3.08-462.el9.x86_64                   68/106
+    control:   Installing       : perl-libs-4:5.32.1-481.el9.x86_64                   69/106
+    control:   Installing       : perl-interpreter-4:5.32.1-481.el9.x86_64            70/106
+    control:   Installing       : perl-threads-1:2.25-460.el9.x86_64                  71/106
+    control:   Installing       : perl-threads-shared-1.61-460.el9.x86_64             72/106
+    control:   Installing       : perl-Thread-Queue-3.14-460.el9.noarch               73/106
+    control:   Installing       : parallel-20240922-2.el9.noarch                      74/106
+    control:   Installing       : vim-filesystem-2:8.2.2637-20.el9_1.noarch           75/106
+    control:   Installing       : vim-common-2:8.2.2637-20.el9_1.x86_64               76/106
+    control:   Installing       : pkgconf-m4-1.7.3-10.el9.noarch                      77/106
+    control:   Installing       : libpkgconf-1.7.3-10.el9.x86_64                      78/106
+    control:   Installing       : pkgconf-1.7.3-10.el9.x86_64                         79/106
+    control:   Installing       : pkgconf-pkg-config-1.7.3-10.el9.x86_64              80/106
+    control:   Installing       : libuv-1:1.42.0-2.el9_4.x86_64                       81/106
+    control:   Installing       : libmaxminddb-1.5.2-3.el9.x86_64                     82/106
+    control:   Installing       : fstrm-0.6.1-3.el9.x86_64                            83/106
+    control:   Installing       : bind-license-32:9.16.23-18.el9_4.6.noarch           84/106
+    control:   Installing       : bind-libs-32:9.16.23-18.el9_4.6.x86_64              85/106
+    control:   Installing       : bind-utils-32:9.16.23-18.el9_4.6.x86_64             86/106
+    control:   Installing       : bash-completion-1:2.11-5.el9.noarch                 87/106
+    control:   Installing       : vim-enhanced-2:8.2.2637-20.el9_1.x86_64             88/106
+    control:   Installing       : bats-1.8.0-1.el9.noarch                             89/106
+    control:   Installing       : mc-1:4.8.26-5.el9.x86_64                            90/106
+    control:   Upgrading        : python3-libsemanage-3.6-1.el9.x86_64                91/106
+    control:   Installing       : python3-PyMySQL-0.10.1-6.el9.noarch                 92/106
+    control:   Installing       : python3-netaddr-0.8.0-5.el9.noarch                  93/106
+    control:   Installing       : python3-pip-21.2.3-8.el9.noarch                     94/106
+    control:   Upgrading        : libselinux-utils-3.6-1.el9.x86_64                   95/106
+    control:   Installing       : tree-1.8.0-10.el9.x86_64                            96/106
+    control:   Installing       : sshpass-1.09-4.el9.x86_64                           97/106
+    control:   Cleanup          : python3-libsemanage-3.3-2.el9.x86_64                98/106
+    control:   Cleanup          : libsemanage-3.3-2.el9.x86_64                        99/106
+    control:   Cleanup          : python3-libselinux-3.3-2.el9.x86_64                100/106
+    control:   Cleanup          : libselinux-utils-3.3-2.el9.x86_64                  101/106
+    control:   Cleanup          : python3-3.9.10-2.el9.x86_64                        102/106
+    control:   Cleanup          : python-unversioned-command-3.9.10-2.el9.noarch     103/106
+    control:   Cleanup          : libselinux-3.3-2.el9.x86_64                        104/106
+    control:   Cleanup          : libsepol-3.3-2.el9.x86_64                          105/106
+    control:   Cleanup          : python3-libs-3.9.10-2.el9.x86_64                   106/106
+    control:   Running scriptlet: python3-libs-3.9.10-2.el9.x86_64                   106/106
+    control:   Verifying        : bind-libs-32:9.16.23-18.el9_4.6.x86_64               1/106
+    control:   Verifying        : bind-license-32:9.16.23-18.el9_4.6.noarch            2/106
+    control:   Verifying        : bind-utils-32:9.16.23-18.el9_4.6.x86_64              3/106
+    control:   Verifying        : fstrm-0.6.1-3.el9.x86_64                             4/106
+    control:   Verifying        : gpm-libs-1.20.7-29.el9.x86_64                        5/106
+    control:   Verifying        : libmaxminddb-1.5.2-3.el9.x86_64                      6/106
+    control:   Verifying        : libuv-1:1.42.0-2.el9_4.x86_64                        7/106
+    control:   Verifying        : mc-1:4.8.26-5.el9.x86_64                             8/106
+    control:   Verifying        : perl-AutoLoader-5.74-481.el9.noarch                  9/106
+    control:   Verifying        : perl-B-1.80-481.el9.x86_64                          10/106
+    control:   Verifying        : perl-Carp-1.50-460.el9.noarch                       11/106
+    control:   Verifying        : perl-Class-Struct-0.66-481.el9.noarch               12/106
+    control:   Verifying        : perl-Data-Dumper-2.174-462.el9.x86_64               13/106
+    control:   Verifying        : perl-Digest-1.19-4.el9.noarch                       14/106
+    control:   Verifying        : perl-Digest-MD5-2.58-4.el9.x86_64                   15/106
+    control:   Verifying        : perl-Encode-4:3.08-462.el9.x86_64                   16/106
+    control:   Verifying        : perl-Errno-1.30-481.el9.x86_64                      17/106
+    control:   Verifying        : perl-Exporter-5.74-461.el9.noarch                   18/106
+    control:   Verifying        : perl-Fcntl-1.13-481.el9.x86_64                      19/106
+    control:   Verifying        : perl-File-Basename-2.85-481.el9.noarch              20/106
+    control:   Verifying        : perl-File-Path-2.18-4.el9.noarch                    21/106
+    control:   Verifying        : perl-File-Temp-1:0.231.100-4.el9.noarch             22/106
+    control:   Verifying        : perl-File-stat-1.09-481.el9.noarch                  23/106
+    control:   Verifying        : perl-FileHandle-2.03-481.el9.noarch                 24/106
+    control:   Verifying        : perl-Getopt-Long-1:2.52-4.el9.noarch                25/106
+    control:   Verifying        : perl-Getopt-Std-1.12-481.el9.noarch                 26/106
+    control:   Verifying        : perl-HTTP-Tiny-0.076-462.el9.noarch                 27/106
+    control:   Verifying        : perl-IO-1.43-481.el9.x86_64                         28/106
+    control:   Verifying        : perl-IO-Socket-IP-0.41-5.el9.noarch                 29/106
+    control:   Verifying        : perl-IO-Socket-SSL-2.073-1.el9.noarch               30/106
+    control:   Verifying        : perl-IPC-Open3-1.21-481.el9.noarch                  31/106
+    control:   Verifying        : perl-MIME-Base64-3.16-4.el9.x86_64                  32/106
+    control:   Verifying        : perl-Mozilla-CA-20200520-6.el9.noarch               33/106
+    control:   Verifying        : perl-NDBM_File-1.15-481.el9.x86_64                  34/106
+    control:   Verifying        : perl-Net-SSLeay-1.92-2.el9.x86_64                   35/106
+    control:   Verifying        : perl-POSIX-1.94-481.el9.x86_64                      36/106
+    control:   Verifying        : perl-PathTools-3.78-461.el9.x86_64                  37/106
+    control:   Verifying        : perl-Pod-Escapes-1:1.07-460.el9.noarch              38/106
+    control:   Verifying        : perl-Pod-Perldoc-3.28.01-461.el9.noarch             39/106
+    control:   Verifying        : perl-Pod-Simple-1:3.42-4.el9.noarch                 40/106
+    control:   Verifying        : perl-Pod-Usage-4:2.01-4.el9.noarch                  41/106
+    control:   Verifying        : perl-Scalar-List-Utils-4:1.56-461.el9.x86_64        42/106
+    control:   Verifying        : perl-SelectSaver-1.02-481.el9.noarch                43/106
+    control:   Verifying        : perl-Socket-4:2.031-4.el9.x86_64                    44/106
+    control:   Verifying        : perl-Storable-1:3.21-460.el9.x86_64                 45/106
+    control:   Verifying        : perl-Symbol-1.08-481.el9.noarch                     46/106
+    control:   Verifying        : perl-Term-ANSIColor-5.01-461.el9.noarch             47/106
+    control:   Verifying        : perl-Term-Cap-1.17-460.el9.noarch                   48/106
+    control:   Verifying        : perl-Text-ParseWords-3.30-460.el9.noarch            49/106
+    control:   Verifying        : perl-Text-Tabs+Wrap-2013.0523-460.el9.noarch        50/106
+    control:   Verifying        : perl-Thread-Queue-3.14-460.el9.noarch               51/106
+    control:   Verifying        : perl-Time-Local-2:1.300-7.el9.noarch                52/106
+    control:   Verifying        : perl-URI-5.09-3.el9.noarch                          53/106
+    control:   Verifying        : perl-base-2.27-481.el9.noarch                       54/106
+    control:   Verifying        : perl-constant-1.33-461.el9.noarch                   55/106
+    control:   Verifying        : perl-if-0.60.800-481.el9.noarch                     56/106
+    control:   Verifying        : perl-interpreter-4:5.32.1-481.el9.x86_64            57/106
+    control:   Verifying        : perl-libnet-3.13-4.el9.noarch                       58/106
+    control:   Verifying        : perl-libs-4:5.32.1-481.el9.x86_64                   59/106
+    control:   Verifying        : perl-mro-1.23-481.el9.x86_64                        60/106
+    control:   Verifying        : perl-overload-1.31-481.el9.noarch                   61/106
+    control:   Verifying        : perl-overloading-0.02-481.el9.noarch                62/106
+    control:   Verifying        : perl-parent-1:0.238-460.el9.noarch                  63/106
+    control:   Verifying        : perl-podlators-1:4.14-460.el9.noarch                64/106
+    control:   Verifying        : perl-subs-1.03-481.el9.noarch                       65/106
+    control:   Verifying        : perl-threads-1:2.25-460.el9.x86_64                  66/106
+    control:   Verifying        : perl-threads-shared-1.61-460.el9.x86_64             67/106
+    control:   Verifying        : perl-vars-1.05-481.el9.noarch                       68/106
+    control:   Verifying        : python3-PyMySQL-0.10.1-6.el9.noarch                 69/106
+    control:   Verifying        : python3-netaddr-0.8.0-5.el9.noarch                  70/106
+    control:   Verifying        : python3-pip-21.2.3-8.el9.noarch                     71/106
+    control:   Verifying        : sshpass-1.09-4.el9.x86_64                           72/106
+    control:   Verifying        : vim-common-2:8.2.2637-20.el9_1.x86_64               73/106
+    control:   Verifying        : vim-enhanced-2:8.2.2637-20.el9_1.x86_64             74/106
+    control:   Verifying        : bash-completion-1:2.11-5.el9.noarch                 75/106
+    control:   Verifying        : libpkgconf-1.7.3-10.el9.x86_64                      76/106
+    control:   Verifying        : pkgconf-1.7.3-10.el9.x86_64                         77/106
+    control:   Verifying        : pkgconf-m4-1.7.3-10.el9.noarch                      78/106
+    control:   Verifying        : pkgconf-pkg-config-1.7.3-10.el9.x86_64              79/106
+    control:   Verifying        : protobuf-c-1.3.3-13.el9.x86_64                      80/106
+    control:   Verifying        : python3-cffi-1.14.5-5.el9.x86_64                    81/106
+    control:   Verifying        : python3-cryptography-36.0.1-4.el9.x86_64            82/106
+    control:   Verifying        : python3-ply-3.11-14.el9.noarch                      83/106
+    control:   Verifying        : python3-pycparser-2.20-6.el9.noarch                 84/106
+    control:   Verifying        : tree-1.8.0-10.el9.x86_64                            85/106
+    control:   Verifying        : vim-filesystem-2:8.2.2637-20.el9_1.noarch           86/106
+    control:   Verifying        : bats-1.8.0-1.el9.noarch                             87/106
+    control:   Verifying        : parallel-20240922-2.el9.noarch                      88/106
+    control:   Verifying        : python-unversioned-command-3.9.18-3.el9_4.5.noar    89/106
+    control:   Verifying        : python-unversioned-command-3.9.10-2.el9.noarch      90/106
+    control:   Verifying        : python3-libselinux-3.6-1.el9.x86_64                 91/106
+    control:   Verifying        : python3-libselinux-3.3-2.el9.x86_64                 92/106
+    control:   Verifying        : python3-libsemanage-3.6-1.el9.x86_64                93/106
+    control:   Verifying        : python3-libsemanage-3.3-2.el9.x86_64                94/106
+    control:   Verifying        : libselinux-3.6-1.el9.x86_64                         95/106
+    control:   Verifying        : libselinux-3.3-2.el9.x86_64                         96/106
+    control:   Verifying        : libselinux-utils-3.6-1.el9.x86_64                   97/106
+    control:   Verifying        : libselinux-utils-3.3-2.el9.x86_64                   98/106
+    control:   Verifying        : libsemanage-3.6-1.el9.x86_64                        99/106
+    control:   Verifying        : libsemanage-3.3-2.el9.x86_64                       100/106
+    control:   Verifying        : libsepol-3.6-1.el9.x86_64                          101/106
+    control:   Verifying        : libsepol-3.3-2.el9.x86_64                          102/106
+    control:   Verifying        : python3-3.9.18-3.el9_4.5.x86_64                    103/106
+    control:   Verifying        : python3-3.9.10-2.el9.x86_64                        104/106
+    control:   Verifying        : python3-libs-3.9.18-3.el9_4.5.x86_64               105/106
+    control:   Verifying        : python3-libs-3.9.10-2.el9.x86_64                   106/106
+    control:
+    control: Upgraded:
+    control:   libselinux-3.6-1.el9.x86_64
+    control:   libselinux-utils-3.6-1.el9.x86_64
+    control:   libsemanage-3.6-1.el9.x86_64
+    control:   libsepol-3.6-1.el9.x86_64
+    control:   python-unversioned-command-3.9.18-3.el9_4.5.noarch
+    control:   python3-3.9.18-3.el9_4.5.x86_64
+    control:   python3-libs-3.9.18-3.el9_4.5.x86_64
+    control:   python3-libselinux-3.6-1.el9.x86_64
+    control:   python3-libsemanage-3.6-1.el9.x86_64
+    control: Installed:
+    control:   bash-completion-1:2.11-5.el9.noarch
+    control:   bats-1.8.0-1.el9.noarch
+    control:   bind-libs-32:9.16.23-18.el9_4.6.x86_64
+    control:   bind-license-32:9.16.23-18.el9_4.6.noarch
+    control:   bind-utils-32:9.16.23-18.el9_4.6.x86_64
+    control:   fstrm-0.6.1-3.el9.x86_64
+    control:   gpm-libs-1.20.7-29.el9.x86_64
+    control:   libmaxminddb-1.5.2-3.el9.x86_64
+    control:   libpkgconf-1.7.3-10.el9.x86_64
+    control:   libuv-1:1.42.0-2.el9_4.x86_64
+    control:   mc-1:4.8.26-5.el9.x86_64
+    control:   parallel-20240922-2.el9.noarch
+    control:   perl-AutoLoader-5.74-481.el9.noarch
+    control:   perl-B-1.80-481.el9.x86_64
+    control:   perl-Carp-1.50-460.el9.noarch
+    control:   perl-Class-Struct-0.66-481.el9.noarch
+    control:   perl-Data-Dumper-2.174-462.el9.x86_64
+    control:   perl-Digest-1.19-4.el9.noarch
+    control:   perl-Digest-MD5-2.58-4.el9.x86_64
+    control:   perl-Encode-4:3.08-462.el9.x86_64
+    control:   perl-Errno-1.30-481.el9.x86_64
+    control:   perl-Exporter-5.74-461.el9.noarch
+    control:   perl-Fcntl-1.13-481.el9.x86_64
+    control:   perl-File-Basename-2.85-481.el9.noarch
+    control:   perl-File-Path-2.18-4.el9.noarch
+    control:   perl-File-Temp-1:0.231.100-4.el9.noarch
+    control:   perl-File-stat-1.09-481.el9.noarch
+    control:   perl-FileHandle-2.03-481.el9.noarch
+    control:   perl-Getopt-Long-1:2.52-4.el9.noarch
+    control:   perl-Getopt-Std-1.12-481.el9.noarch
+    control:   perl-HTTP-Tiny-0.076-462.el9.noarch
+    control:   perl-IO-1.43-481.el9.x86_64
+    control:   perl-IO-Socket-IP-0.41-5.el9.noarch
+    control:   perl-IO-Socket-SSL-2.073-1.el9.noarch
+    control:   perl-IPC-Open3-1.21-481.el9.noarch
+    control:   perl-MIME-Base64-3.16-4.el9.x86_64
+    control:   perl-Mozilla-CA-20200520-6.el9.noarch
+    control:   perl-NDBM_File-1.15-481.el9.x86_64
+    control:   perl-Net-SSLeay-1.92-2.el9.x86_64
+    control:   perl-POSIX-1.94-481.el9.x86_64
+    control:   perl-PathTools-3.78-461.el9.x86_64
+    control:   perl-Pod-Escapes-1:1.07-460.el9.noarch
+    control:   perl-Pod-Perldoc-3.28.01-461.el9.noarch
+    control:   perl-Pod-Simple-1:3.42-4.el9.noarch
+    control:   perl-Pod-Usage-4:2.01-4.el9.noarch
+    control:   perl-Scalar-List-Utils-4:1.56-461.el9.x86_64
+    control:   perl-SelectSaver-1.02-481.el9.noarch
+    control:   perl-Socket-4:2.031-4.el9.x86_64
+    control:   perl-Storable-1:3.21-460.el9.x86_64
+    control:   perl-Symbol-1.08-481.el9.noarch
+    control:   perl-Term-ANSIColor-5.01-461.el9.noarch
+    control:   perl-Term-Cap-1.17-460.el9.noarch
+    control:   perl-Text-ParseWords-3.30-460.el9.noarch
+    control:   perl-Text-Tabs+Wrap-2013.0523-460.el9.noarch
+    control:   perl-Thread-Queue-3.14-460.el9.noarch
+    control:   perl-Time-Local-2:1.300-7.el9.noarch
+    control:   perl-URI-5.09-3.el9.noarch
+    control:   perl-base-2.27-481.el9.noarch
+    control:   perl-constant-1.33-461.el9.noarch
+    control:   perl-if-0.60.800-481.el9.noarch
+    control:   perl-interpreter-4:5.32.1-481.el9.x86_64
+    control:   perl-libnet-3.13-4.el9.noarch
+    control:   perl-libs-4:5.32.1-481.el9.x86_64
+    control:   perl-mro-1.23-481.el9.x86_64
+    control:   perl-overload-1.31-481.el9.noarch
+    control:   perl-overloading-0.02-481.el9.noarch
+    control:   perl-parent-1:0.238-460.el9.noarch
+    control:   perl-podlators-1:4.14-460.el9.noarch
+    control:   perl-subs-1.03-481.el9.noarch
+    control:   perl-threads-1:2.25-460.el9.x86_64
+    control:   perl-threads-shared-1.61-460.el9.x86_64
+    control:   perl-vars-1.05-481.el9.noarch
+    control:   pkgconf-1.7.3-10.el9.x86_64
+    control:   pkgconf-m4-1.7.3-10.el9.noarch
+    control:   pkgconf-pkg-config-1.7.3-10.el9.x86_64
+    control:   protobuf-c-1.3.3-13.el9.x86_64
+    control:   python3-PyMySQL-0.10.1-6.el9.noarch
+    control:   python3-cffi-1.14.5-5.el9.x86_64
+    control:   python3-cryptography-36.0.1-4.el9.x86_64
+    control:   python3-netaddr-0.8.0-5.el9.noarch
+    control:   python3-pip-21.2.3-8.el9.noarch
+    control:   python3-ply-3.11-14.el9.noarch
+    control:   python3-pycparser-2.20-6.el9.noarch
+    control:   sshpass-1.09-4.el9.x86_64
+    control:   tree-1.8.0-10.el9.x86_64
+    control:   vim-common-2:8.2.2637-20.el9_1.x86_64
+    control:   vim-enhanced-2:8.2.2637-20.el9_1.x86_64
+    control:   vim-filesystem-2:8.2.2637-20.el9_1.noarch
+    control:
+    control: Complete!
+    control: Defaulting to user installation because normal site-packages is not writeable
+    control: Collecting ansible
+    control:   Downloading ansible-8.7.0-py3-none-any.whl (48.4 MB)
+    control: Collecting ansible-core~=2.15.7
+    control:   Downloading ansible_core-2.15.12-py3-none-any.whl (2.3 MB)
+    control: Requirement already satisfied: PyYAML>=5.1 in /usr/lib64/python3.9/site-packages (from ansible-core~=2.15.7->ansible) (5.4.1)
+    control: Collecting importlib-resources<5.1,>=5.0
+    control:   Downloading importlib_resources-5.0.7-py3-none-any.whl (24 kB)
+    control: Collecting jinja2>=3.0.0
+    control:   Downloading jinja2-3.1.4-py3-none-any.whl (133 kB)
+    control: Collecting packaging
+    control:   Downloading packaging-24.1-py3-none-any.whl (53 kB)
+    control: Collecting resolvelib<1.1.0,>=0.5.3
+    control:   Downloading resolvelib-1.0.1-py2.py3-none-any.whl (17 kB)
+    control: Requirement already satisfied: cryptography in /usr/lib64/python3.9/site-packages (from ansible-core~=2.15.7->ansible) (36.0.1)
+    control: Collecting MarkupSafe>=2.0
+    control:   Downloading MarkupSafe-3.0.2-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (20 kB)
+    control: Requirement already satisfied: cffi>=1.12 in /usr/lib64/python3.9/site-packages (from cryptography->ansible-core~=2.15.7->ansible) (1.14.5)
+    control: Requirement already satisfied: pycparser in /usr/lib/python3.9/site-packages (from cffi>=1.12->cryptography->ansible-core~=2.15.7->ansible) (2.20)
+    control: Requirement already satisfied: ply==3.11 in /usr/lib/python3.9/site-packages (from pycparser->cffi>=1.12->cryptography->ansible-core~=2.15.7->ansible) (3.11)
+    control: Installing collected packages: MarkupSafe, resolvelib, packaging, jinja2, importlib-resources, ansible-core, ansible
+    control:   WARNING: Value for scheme.platlib does not match. Please report this to <https://github.com/pypa/pip/issues/10151>
+    control:   distutils: /home/vagrant/.local/lib/python3.9/site-packages
+    control:   sysconfig: /home/vagrant/.local/lib64/python3.9/site-packages
+    control:   WARNING: Additional context:
+    control:   user = True
+    control:   home = None
+    control:   root = None
+    control:   prefix = None
+    control: Successfully installed MarkupSafe-3.0.2 ansible-8.7.0 ansible-core-2.15.12 importlib-resources-5.0.7 jinja2-3.1.4 packaging-24.1 resolvelib-1.0.1
+
+Benny@FLAB2021 MINGW64 /c/DATA/GIT/IA/infra-labs-24-25-BennyClemmens/vmlab (main)
+$
+```
 
 **Possible issue for Linux/MacOS users**: you might run into an error concerning the allowed IP-range of host-only networks in VirtualBox. The error message itself is quite self-explanatory: you should create/adapt the `/etc/vbox/networks.conf` file to allow all IP-addresses using the following line:
 
@@ -56,20 +733,222 @@ Go to the `vmlab` directory and start the Vagrant environment with `vagrant up`.
 * 0.0.0.0/0
 ```
 
+`Not an issue as I am using Windows.`
+
 Check that you can log in to the VM with `vagrant ssh control`.
 
+```bash
+Benny@FLAB2021 MINGW64 /c/DATA/GIT/IA/infra-labs-24-25-BennyClemmens/vmlab (main)
+$ vagrant ssh control
+
+This system is built by the Bento project by Chef Software
+More information can be found at https://github.com/chef/bento
+[vagrant@control ~]$
+```
+
 - What is/are the IP addresses of this VM?
+
+  ```bash
+  [vagrant@control ~]$ ip -4 a | awk '/inet / {print $2}'
+  127.0.0.1/8
+  10.0.2.15/24
+  172.16.128.253/16
+  [vagrant@control ~]$ grep -A 3 '\- name: control' /vagrant/vagrant-hosts.yml
+  - name: control
+    ip: 172.16.128.253
+    netmask: 255.255.0.0
+    box: bento/almalinux-9
+  ```
+
 - Check the VirtualBox network adapters of the VM and see if you can match the IP addresses with the VirtualBox adapter.
+
+  ![200_control_nic1](img/200_control_nic1.PNG)
+
+  ![201_control_nic2](img/201_control_nic2.PNG)
+
+  ![202_networks](img/202_networks.PNG)
+
 - Which Linux distribution are we running (command `lsb_release -a` or `cat /etc/redhat-release`)? Find some information about this distro!
+
+  ```bash
+  [vagrant@control ~]$ lsb_release -a
+  -bash: lsb_release: command not found
+  [vagrant@control ~]$ cat /etc/redhat-release
+  AlmaLinux release 9.0 (Emerald Puma)
+  [vagrant@control ~]$ cat /etc/os-release
+  NAME="AlmaLinux"
+  VERSION="9.0 (Emerald Puma)"
+  ID="almalinux"
+  ID_LIKE="rhel centos fedora"
+  VERSION_ID="9.0"
+  PLATFORM_ID="platform:el9"
+  PRETTY_NAME="AlmaLinux 9.0 (Emerald Puma)"
+  ANSI_COLOR="0;34"
+  LOGO="fedora-logo-icon"
+  CPE_NAME="cpe:/o:almalinux:almalinux:9::baseos"
+  HOME_URL="https://almalinux.org/"
+  DOCUMENTATION_URL="https://wiki.almalinux.org/"
+  BUG_REPORT_URL="https://bugs.almalinux.org/"
+
+  ALMALINUX_MANTISBT_PROJECT="AlmaLinux-9"
+  ALMALINUX_MANTISBT_PROJECT_VERSION="9.0"
+  REDHAT_SUPPORT_PRODUCT="AlmaLinux"
+  REDHAT_SUPPORT_PRODUCT_VERSION="9.0"
+  ```
+
+  <https://wiki.almalinux.org/>
+
 - What version of the Linux kernel is installed (uname -a)?
+
+  ```bash
+  [vagrant@control ~]$ uname -a
+  Linux control 5.14.0-70.13.1.el9_0.x86_64 #1 SMP PREEMPT Tue May 17 15:53:11 EDT 2022 x86_64 x86_64 x86_64 GNU/Linux
+  ```
+
 - What version of Ansible is installed?
+
+  ```bash
+  [vagrant@control ~]$ ansible --version
+  ansible [core 2.15.12]
+    config file = None
+    configured module search path = ['/home/vagrant/.ansible/plugins/modules', '/usr/share/ansible/plugins/modules']
+    ansible python module location = /home/vagrant/.local/lib/python3.9/site-packages/ansible
+    ansible collection location = /home/vagrant/.ansible/collections:/usr/share/ansible/collections
+    executable location = /home/vagrant/.local/bin/ansible
+    python version = 3.9.18 (main, Aug 23 2024, 00:00:00) [GCC 11.4.1 20231218 (Red Hat 11.4.1-3)] (/usr/bin/python3)
+    jinja version = 3.1.4
+    libyaml = True
+  ```
+
 - Check the contents of the direcory `/vagrant/`.
+
+  ```bash
+  [vagrant@control ~]$ ls -l /vagrant/
+  total 24
+  drwxrwxrwx. 1 vagrant vagrant     0 Oct 11 06:21 ansible
+  -rwxrwxrwx. 1 vagrant vagrant  1083 Oct 11 06:21 LICENSE
+  -rwxrwxrwx. 1 vagrant vagrant 11125 Oct 11 06:21 README.md
+  drwxrwxrwx. 1 vagrant vagrant     0 Oct 11 06:21 scripts
+  drwxrwxrwx. 1 vagrant vagrant     0 Oct 11 06:21 test
+  -rwxrwxrwx. 1 vagrant vagrant  3752 Oct 11 06:21 Vagrantfile
+  -rwxrwxrwx. 1 vagrant vagrant   840 Oct 11 06:21 vagrant-hosts.yml
+  ```
 
     The contents of this directory correspond with the `vmlab/` directory on your physical system. In fact, it is a shared directory, so changes you make on your physical system are immediately visible on the VM and vice versa.
 
+    ```bash
+    Benny@FLAB2021 MINGW64 /c/DATA/GIT/IA/infra-labs-24-25-BennyClemmens/vmlab (main)
+    $ ls -l
+    total 24
+    drwxr-xr-x 1 Benny 197121     0 okt 11 08:21 ansible/
+    -rw-r--r-- 1 Benny 197121  1083 okt 11 08:21 LICENSE
+    -rw-r--r-- 1 Benny 197121 11125 okt 11 08:21 README.md
+    drwxr-xr-x 1 Benny 197121     0 okt 11 08:21 scripts/
+    drwxr-xr-x 1 Benny 197121     0 okt 11 08:21 test/
+    -rw-r--r-- 1 Benny 197121  3752 okt 11 08:21 Vagrantfile
+    -rw-r--r-- 1 Benny 197121   840 okt 11 08:21 vagrant-hosts.yml
+    ```
+
 You can start using the control node to execute Ansible commands. Ensure that you're in the correct directory (`/vagrant/ansible/`) before you do!
 
+`Being in this directory is because future commands rely on an inventory in the directory. This work nonetheless:`
+
+```bash
+[vagrant@control ~]$ pwd
+/home/vagrant
+[vagrant@control ~]$ ansible localhost -m ping
+[WARNING]: No inventory was parsed, only implicit localhost is available
+localhost | SUCCESS => {
+    "changed": false,
+    "ping": "pong"
+}
+```
+
 Feel free to improve the configuration of the control node to your liking. To make your changes persistent, update the Bash script found in `vmlab/scripts/control.sh`. This script is executed every time the VM is created, or when you run `vagrant provision control`. For example, you can install additional useful commands or Ansible dependencies, customize the bashrc file with command aliases or a fancy prompt, run the Ansible playbooks to configure the managed hosts, etc.
+
+`Scripts will be customized later. For now a show that the provisioning is idempotent.`
+
+```bash
+Benny@FLAB2021 MINGW64 /c/DATA/GIT/IA/infra-labs-24-25-BennyClemmens/vmlab (main)
+$ vagrant provision control
+==> control: Running provisioner: shell...
+    control: Running: C:/Users/Benny/AppData/Local/Temp/vagrant-shell20241021-26236-9t576i.sh
+    control: [LOG]  Starting server specific provisioning tasks on host control
+    control: [LOG]  Installing Ansible and dependencies
+    control: Last metadata expiration check: 1:02:09 ago on Mon 21 Oct 2024 07:46:24 AM UTC.
+    control: Package epel-release-9-5.el9.noarch is already installed.
+    control: Dependencies resolved.
+    control: ================================================================================
+    control:  Package                Architecture     Version           Repository      Size
+    control: ================================================================================
+    control: Upgrading:
+    control:  epel-release           noarch           9-8.el9           epel            18 k
+    control:
+    control: Transaction Summary
+    control: ================================================================================
+    control: Upgrade  1 Package
+    control:
+    control: Total download size: 18 k
+    control: Downloading Packages:
+    control: epel-release-9-8.el9.noarch.rpm                  57 kB/s |  18 kB     00:00
+    control: --------------------------------------------------------------------------------
+    control: Total                                            20 kB/s |  18 kB     00:00
+    control: Running transaction check
+    control: Transaction check succeeded.
+    control: Running transaction test
+    control: Transaction test succeeded.
+    control: Running transaction
+    control:   Preparing        :                                                        1/1
+    control:   Upgrading        : epel-release-9-8.el9.noarch                            1/2
+    control:   Running scriptlet: epel-release-9-8.el9.noarch                            1/2
+    control:   Cleanup          : epel-release-9-5.el9.noarch                            2/2
+    control:   Running scriptlet: epel-release-9-5.el9.noarch                            2/2
+    control:   Verifying        : epel-release-9-8.el9.noarch                            1/2
+    control:   Verifying        : epel-release-9-5.el9.noarch                            2/2
+    control:
+    control: Upgraded:
+    control:   epel-release-9-8.el9.noarch
+    control:
+    control: Complete!
+    control: Extra Packages for Enterprise Linux 9 openh264  3.1 kB/s | 2.5 kB     00:00
+    control: Package bash-completion-1:2.11-5.el9.noarch is already installed.
+    control: Package bats-1.8.0-1.el9.noarch is already installed.
+    control: Package bind-utils-32:9.16.23-18.el9_4.6.x86_64 is already installed.
+    control: Package mc-1:4.8.26-5.el9.x86_64 is already installed.
+    control: Package psmisc-23.4-3.el9.x86_64 is already installed.
+    control: Package python3-libselinux-3.6-1.el9.x86_64 is already installed.
+    control: Package python3-libsemanage-3.6-1.el9.x86_64 is already installed.
+    control: Package python3-netaddr-0.8.0-5.el9.noarch is already installed.
+    control: Package python3-pip-21.2.3-8.el9.noarch is already installed.
+    control: Package python3-PyMySQL-0.10.1-6.el9.noarch is already installed.
+    control: Package sshpass-1.09-4.el9.x86_64 is already installed.
+    control: Package tree-1.8.0-10.el9.x86_64 is already installed.
+    control: Package vim-enhanced-2:8.2.2637-20.el9_1.x86_64 is already installed.
+    control: Dependencies resolved.
+    control: Nothing to do.
+    control: Complete!
+    control: Defaulting to user installation because normal site-packages is not writeable
+    control: Requirement already satisfied: ansible in ./.local/lib/python3.9/site-packages (8.7.0)
+    control: Requirement already satisfied: ansible-core~=2.15.7 in ./.local/lib/python3.9/site-packages (from ansible) (2.15.12)
+    control: Requirement already satisfied: cryptography in /usr/lib64/python3.9/site-packages (from ansible-core~=2.15.7->ansible) (36.0.1)
+    control: Requirement already satisfied: PyYAML>=5.1 in /usr/lib64/python3.9/site-packages (from ansible-core~=2.15.7->ansible) (5.4.1)
+    control: Requirement already satisfied: packaging in ./.local/lib/python3.9/site-packages (from ansible-core~=2.15.7->ansible) (24.1)
+    control: Requirement already satisfied: resolvelib<1.1.0,>=0.5.3 in ./.local/lib/python3.9/site-packages (from ansible-core~=2.15.7->ansible) (1.0.1)
+    control: Requirement already satisfied: jinja2>=3.0.0 in ./.local/lib/python3.9/site-packages (from ansible-core~=2.15.7->ansible) (3.1.4)
+    control: Requirement already satisfied: importlib-resources<5.1,>=5.0 in ./.local/lib/python3.9/site-packages (from ansible-core~=2.15.7->ansible) (5.0.7)
+    control: Requirement already satisfied: MarkupSafe>=2.0 in ./.local/lib/python3.9/site-packages (from jinja2>=3.0.0->ansible-core~=2.15.7->ansible) (3.0.2)
+    control: Requirement already satisfied: cffi>=1.12 in /usr/lib64/python3.9/site-packages (from cryptography->ansible-core~=2.15.7->ansible) (1.14.5)
+    control: Requirement already satisfied: pycparser in /usr/lib/python3.9/site-packages (from cffi>=1.12->cryptography->ansible-core~=2.15.7->ansible) (2.20)
+    control: Requirement already satisfied: ply==3.11 in /usr/lib/python3.9/site-packages (from pycparser->cffi>=1.12->cryptography->ansible-core~=2.15.7->ansible) (3.11)
+    control: WARNING: Value for scheme.platlib does not match. Please report this to <https://github.com/pypa/pip/issues/10151>
+    control: distutils: /home/vagrant/.local/lib/python3.9/site-packages
+    control: sysconfig: /home/vagrant/.local/lib64/python3.9/site-packages
+    control: WARNING: Additional context:
+    control: user = True
+    control: home = None
+    control: root = None
+    control: prefix = None
+```
 
 ## 2.2. Adding a managed node
 
