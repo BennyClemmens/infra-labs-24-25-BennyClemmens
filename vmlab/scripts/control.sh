@@ -42,7 +42,8 @@ dnf install --assumeyes \
   python3-PyMySQL \
   sshpass \
   tree \
-  vim-enhanced
+  vim-enhanced \
+  nano
 
 sudo --login --non-interactive --user=vagrant -- \
   pip install ansible

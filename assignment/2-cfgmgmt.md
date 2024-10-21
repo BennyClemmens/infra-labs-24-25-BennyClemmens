@@ -963,9 +963,90 @@ Add a new VM named `srv100` (which will become our web server) to the Vagrant en
   box: bento/almalinux-9
 ```
 
+```bash
+[vagrant@control ~]$ grep -vE '^#|^$' /vagrant/vagrant-hosts.yml
+---
+- name: srv100
+  ip: 172.16.128.100
+  netmask: 255.255.0.0
+  box: bento/almalinux-9
+- name: control
+  ip: 172.16.128.253
+  netmask: 255.255.0.0
+  box: bento/almalinux-9
+```
+
 Your control node should always be the last VM defined in `vagrant-hosts.yml`. The reason will become apparent at the final stage of this assignment.
 
+`As we will be using the 'control'-node as the machine from which we run ansible commands, the other machines offcourse have to be up first.`
+
 Check whether the new VM is recognized by Vagrant by running `vagrant status` and look for the host name in the command output. If it is, start the VM with `vagrant up srv100`. Check that you can log in to the VM with `vagrant ssh srv100`.
+
+```bash
+Benny@FLAB2021 MINGW64 /c/DATA/GIT/IA/infra-labs-24-25-BennyClemmens/vmlab (main)
+$ vagrant status
+Current machine states:
+
+srv100                    not created (virtualbox)
+control                   running (virtualbox)
+
+This environment represents multiple VMs. The VMs are all listed
+above with their current state. For more information about a specific
+VM, run `vagrant status NAME`.
+
+Benny@FLAB2021 MINGW64 /c/DATA/GIT/IA/infra-labs-24-25-BennyClemmens/vmlab (main)
+$ vagrant up srv100
+Bringing machine 'srv100' up with 'virtualbox' provider...
+==> srv100: Importing base box 'bento/almalinux-9'...
+==> srv100: Matching MAC address for NAT networking...
+==> srv100: Checking if box 'bento/almalinux-9' version '202206.14.0' is up to date...
+==> srv100: A newer version of the box 'bento/almalinux-9' for provider 'virtualbox' is
+==> srv100: available! You currently have version '202206.14.0'. The latest is version
+==> srv100: '202407.22.0'. Run `vagrant box update` to update.
+==> srv100: Setting the name of the VM: vmlab_srv100_1729501393550_50774
+==> srv100: Fixed port collision for 22 => 2222. Now on port 2200.
+==> srv100: Clearing any previously set network interfaces...
+==> srv100: Preparing network interfaces based on configuration...
+    srv100: Adapter 1: nat
+    srv100: Adapter 2: hostonly
+==> srv100: Forwarding ports...
+    srv100: 22 (guest) => 2200 (host) (adapter 1)
+==> srv100: Running 'pre-boot' VM customizations...
+==> srv100: Booting VM...
+==> srv100: Waiting for machine to boot. This may take a few minutes...
+    srv100: SSH address: 127.0.0.1:2200
+    srv100: SSH username: vagrant
+    srv100: SSH auth method: private key
+    srv100:
+    srv100: Vagrant insecure key detected. Vagrant will automatically replace
+    srv100: this with a newly generated keypair for better security.
+    srv100:
+    srv100: Inserting generated public key within guest...
+    srv100: Removing insecure key from the guest if it's present...
+    srv100: Key inserted! Disconnecting and reconnecting using new SSH key...
+==> srv100: Machine booted and ready!
+==> srv100: Checking for guest additions in VM...
+    srv100: The guest additions on this VM do not match the installed version of
+    srv100: VirtualBox! In most cases this is fine, but in rare cases it can
+    srv100: prevent things such as shared folders from working properly. If you see
+    srv100: shared folder errors, please make sure the guest additions within the
+    srv100: virtual machine match the version of VirtualBox you have installed on
+    srv100: your host and reload your VM.
+    srv100:
+    srv100: Guest Additions Version: 6.1.34
+    srv100: VirtualBox Version: 7.0
+==> srv100: Setting hostname...
+==> srv100: Configuring and enabling network interfaces...
+==> srv100: Mounting shared folders...
+    srv100: /vagrant => C:/DATA/GIT/IA/infra-labs-24-25-BennyClemmens/vmlab
+
+Benny@FLAB2021 MINGW64 /c/DATA/GIT/IA/infra-labs-24-25-BennyClemmens/vmlab (main)
+$ vagrant ssh srv100
+
+This system is built by the Bento project by Chef Software
+More information can be found at https://github.com/chef/bento
+[vagrant@srv100 ~]$
+```
 
 In order to communicate with managed nodes, you need to provide Ansible with a list of hosts. This list is called an [inventory](https://docs.ansible.com/ansible/latest/user_guide/intro_inventory.html). The inventory can be a simple list of host names, but it can also contain additional information like the host's IP address, the user account to log in with, etc. We will use a simple inventory file that contains only the host name of the VM we just created. Create a file `vmlab/ansible/inventory.yml` with the following contents:
 
@@ -981,9 +1062,139 @@ servers:
       ansible_host: 172.16.128.100
 ```
 
+```bash
+[vagrant@control ansible]$ pwd
+/vagrant/ansible
+[vagrant@control ansible]$ touch inventory.yml
+[vagrant@control ansible]$ nano inventory.yml
+-bash: nano: command not found
+[vagrant@control ansible]$ which vim
+/usr/bin/vim
+```
+
+`Added nano into dnf install in control.sh. Please don't hate me :)`
+
+```bash
+Benny@FLAB2021 MINGW64 /c/DATA/GIT/IA/infra-labs-24-25-BennyClemmens/vmlab (main)
+$ vagrant provision control
+==> control: Running provisioner: shell...
+    control: Running: C:/Users/Benny/AppData/Local/Temp/vagrant-shell20241021-30740-ux12x7.sh
+    control: [LOG]  Starting server specific provisioning tasks on host control
+    control: [LOG]  Installing Ansible and dependencies
+    control: Last metadata expiration check: 0:27:05 ago on Mon 21 Oct 2024 08:48:36 AM UTC.
+    control: Package epel-release-9-8.el9.noarch is already installed.
+    control: Dependencies resolved.
+    control: Nothing to do.
+    control: Complete!
+    control: Last metadata expiration check: 0:27:06 ago on Mon 21 Oct 2024 08:48:36 AM UTC.
+    control: Package bash-completion-1:2.11-5.el9.noarch is already installed.
+    control: Package bats-1.8.0-1.el9.noarch is already installed.
+    control: Package bind-utils-32:9.16.23-18.el9_4.6.x86_64 is already installed.
+    control: Package mc-1:4.8.26-5.el9.x86_64 is already installed.
+    control: Package psmisc-23.4-3.el9.x86_64 is already installed.
+    control: Package python3-libselinux-3.6-1.el9.x86_64 is already installed.
+    control: Package python3-libsemanage-3.6-1.el9.x86_64 is already installed.
+    control: Package python3-netaddr-0.8.0-5.el9.noarch is already installed.
+    control: Package python3-pip-21.2.3-8.el9.noarch is already installed.
+    control: Package python3-PyMySQL-0.10.1-6.el9.noarch is already installed.
+    control: Package sshpass-1.09-4.el9.x86_64 is already installed.
+    control: Package tree-1.8.0-10.el9.x86_64 is already installed.
+    control: Package vim-enhanced-2:8.2.2637-20.el9_1.x86_64 is already installed.
+    control: Dependencies resolved.
+    control: ================================================================================
+    control:  Package        Architecture     Version                 Repository        Size
+    control: ================================================================================
+    control: Installing:
+    control:  nano           x86_64           5.6.1-5.el9             baseos           690 k
+    control:
+    control: Transaction Summary
+    control: ================================================================================
+    control: Install  1 Package
+    control:
+    control: Total download size: 690 k
+    control: Installed size: 2.7 M
+    control: Downloading Packages:
+    control: nano-5.6.1-5.el9.x86_64.rpm                     3.0 MB/s | 690 kB     00:00
+    control: --------------------------------------------------------------------------------
+    control: Total                                           951 kB/s | 690 kB     00:00
+    control: Running transaction check
+    control: Transaction check succeeded.
+    control: Running transaction test
+    control: Transaction test succeeded.
+    control: Running transaction
+    control:   Preparing        :                                                        1/1
+    control:   Installing       : nano-5.6.1-5.el9.x86_64                                1/1
+    control:   Running scriptlet: nano-5.6.1-5.el9.x86_64                                1/1
+    control:   Verifying        : nano-5.6.1-5.el9.x86_64                                1/1
+    control:
+    control: Installed:
+    control:   nano-5.6.1-5.el9.x86_64
+    control:
+    control: Complete!
+    control: Defaulting to user installation because normal site-packages is not writeable
+    control: Requirement already satisfied: ansible in ./.local/lib/python3.9/site-packages (8.7.0)
+    control: Requirement already satisfied: ansible-core~=2.15.7 in ./.local/lib/python3.9/site-packages (from ansible) (2.15.12)
+    control: Requirement already satisfied: cryptography in /usr/lib64/python3.9/site-packages (from ansible-core~=2.15.7->ansible) (36.0.1)
+    control: Requirement already satisfied: jinja2>=3.0.0 in ./.local/lib/python3.9/site-packages (from ansible-core~=2.15.7->ansible) (3.1.4)
+    control: Requirement already satisfied: packaging in ./.local/lib/python3.9/site-packages (from ansible-core~=2.15.7->ansible) (24.1)
+    control: Requirement already satisfied: resolvelib<1.1.0,>=0.5.3 in ./.local/lib/python3.9/site-packages (from ansible-core~=2.15.7->ansible) (1.0.1)
+    control: Requirement already satisfied: PyYAML>=5.1 in /usr/lib64/python3.9/site-packages (from ansible-core~=2.15.7->ansible) (5.4.1)
+    control: Requirement already satisfied: importlib-resources<5.1,>=5.0 in ./.local/lib/python3.9/site-packages (from ansible-core~=2.15.7->ansible) (5.0.7)
+    control: Requirement already satisfied: MarkupSafe>=2.0 in ./.local/lib/python3.9/site-packages (from jinja2>=3.0.0->ansible-core~=2.15.7->ansible) (3.0.2)
+    control: Requirement already satisfied: cffi>=1.12 in /usr/lib64/python3.9/site-packages (from cryptography->ansible-core~=2.15.7->ansible) (1.14.5)
+    control: Requirement already satisfied: pycparser in /usr/lib/python3.9/site-packages (from cffi>=1.12->cryptography->ansible-core~=2.15.7->ansible) (2.20)
+    control: Requirement already satisfied: ply==3.11 in /usr/lib/python3.9/site-packages (from pycparser->cffi>=1.12->cryptography->ansible-core~=2.15.7->ansible) (3.11)
+    control: WARNING: Value for scheme.platlib does not match. Please report this to <https://github.com/pypa/pip/issues/10151>
+    control: distutils: /home/vagrant/.local/lib/python3.9/site-packages
+    control: sysconfig: /home/vagrant/.local/lib64/python3.9/site-packages
+    control: WARNING: Additional context:
+    control: user = True
+    control: home = None
+    control: root = None
+    control: prefix = None
+```
+
+```bash
+[vagrant@control ~]$ nano /vagrant/ansible/inventory.yml
+[vagrant@control ~]$ cat /vagrant/ansible/inventory.yml
+---
+servers:
+  vars:
+    ansible_user: vagrant
+    ansible_ssh_password: vagrant
+    ansible_become: true
+  hosts:
+    srv100:
+      ansible_host: 172.16.128.100
+```
+
 The first line with `servers:` defines a group of hosts. All server VMs will be added to this group. Later, we'll add another group for the router VM.
 
 The variables section contains a list of variables that apply to all hosts in the group. The variables `ansible_user` specifies the user that Ansible will use to log in to the managed nodes and run commands. The variable `ansible_ssh_private_key_file` specifies the SSH private key that will be used to log in. This one in particular was generated automatically by Vagrant and is also used when you execute `vagrant ssh`. The variable `ansible_become` specifies that Ansible should use `sudo` to run commands with administrator privileges.
+
+`The previous paragraph still mentions the 23-24 settings where the key-file was used. However there are some issue's when using this file: It does not have the correct visibilty as it is on a shared folder (mapped from the Windows). This can be solved with some scripting. The 23-24 inventory is found in another file and will be dealt with later, but this is a more secure then using login/password. Also note: System hardening should disable login/password.`
+
+```bash
+[vagrant@control ~]$ ls -al /vagrant/.vagrant/machines/srv100/virtualbox/private_key
+-rwxrwxrwx. 1 vagrant vagrant 1702 Oct 21 09:03 /vagrant/.vagrant/machines/srv100/virtualbox/private_key
+[vagrant@control ansible]$ cat /vagrant/ansible/inventory_pk.yml
+---
+servers:
+  vars:
+    ansible_user: vagrant
+    ansible_become: true
+  hosts:
+    srv100:
+      ansible_ssh_private_key_file: /vagrant/.vagrant/machines/srv100/virtualbox/private_key
+      ansible_host: 172.16.128.100
+
+[vagrant@control ansible]$ ansible -i /vagrant/ansible/inventory_pk.yml -m ping srv100
+srv100 | UNREACHABLE! => {
+    "changed": false,
+    "msg": "Failed to connect to the host via ssh: @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\r\n@         WARNING: UNPROTECTED PRIVATE KEY FILE!          @\r\n@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\r\nPermissions 0777 for '/vagrant/.vagrant/machines/srv100/virtualbox/private_key' are too open.\r\nIt is required that your private key files are NOT accessible by others.\r\nThis private key will be ignored.\r\nLoad key \"/vagrant/.vagrant/machines/srv100/virtualbox/private_key\": bad permissions\r\nvagrant@172.16.128.100: Permission denied (publickey,gssapi-keyex,gssapi-with-mic,password).",
+    "unreachable": true
+}
+```
 
 The `hosts` section contains a list of hosts that Ansible can manage. You will extend this list later. The `ansible_host` variable specifies the IP address of the host. This is necessary because the host name `srv100` is not known outside the VM: there is no DNS server available (yet!) that knows how to map host name `srv100` to the specified IP address.
 
@@ -993,12 +1204,748 @@ To check whether Ansible can communicate with the VM, execute the following comm
 ansible -i inventory.yml -m ping srv100
 ```
 
+```bash
+[vagrant@control ~]$ ansible -i /vagrant/ansible/inventory.yml -m ping srv100
+srv100 | FAILED! => {
+    "msg": "Using a SSH password instead of a key is not possible because Host Key checking is enabled and sshpass does not support this.  Please add this host's fingerprint to your known_hosts file to manage this host."
+}
+```
+
+`In the 23-24 edition of this course, another issue appeared where first sshpass had to be installed.`
+
 It's possible you get an SSH fingerprint error, which is normal if it's the first time you connect to srv100 through SSH. To resolve this issue, you can manually connect to srv100 through SSH, collect the server's fingerprint or enable an Ansible setting to disable host key checking (don't do this on production systems!).
+
+`First try:`
+
+```bash
+[vagrant@control ~]$ export ANSIBLE_HOST_KEY_CHECKING=False
+[vagrant@control ~]$ ansible -i /vagrant/ansible/inventory.yml -m ping srv100
+srv100 | SUCCESS => {
+    "ansible_facts": {
+        "discovered_interpreter_python": "/usr/bin/python3"
+    },
+    "changed": false,
+    "ping": "pong"
+}
+```
+
+`This is not best practice so let's revert that.`
+
+```bash
+[vagrant@control ~]$ cat ~/.ssh/known_hosts
+172.16.128.100 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGQzBJQb/qgJ4LNbTeQxjnLHH1OGshIng0WCHjX+yAcB
+[vagrant@control ~]$ ssh-keygen -R 172.163128.100
+Host 172.163128.100 not found in /home/vagrant/.ssh/known_hosts
+[vagrant@control ~]$ ssh-keygen -R 172.16.128.100
+# Host 172.16.128.100 found: line 1
+/home/vagrant/.ssh/known_hosts updated.
+Original contents retained as /home/vagrant/.ssh/known_hosts.old
+[vagrant@control ~]$ unset ANSIBLE_HOST_KEY_CHECKING
+[vagrant@control ~]$ ansible -i /vagrant/ansible/inventory.yml -m ping srv100
+srv100 | FAILED! => {
+    "msg": "Using a SSH password instead of a key is not possible because Host Key checking is enabled and sshpass does not support this.  Please add this host's fingerprint to your known_hosts file to manage this host."
+}
+```
+
+`Manually connecting to srv100.`
+
+```bash
+[vagrant@control ~]$ ssh vagrant@172.16.128.100
+The authenticity of host '172.16.128.100 (172.16.128.100)' can't be established.
+ED25519 key fingerprint is SHA256:IIVg0tr5PqwbgvyJ7YEWXwDsycHE0bY1M7M9zCm5f9o.
+This key is not known by any other names
+Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+Warning: Permanently added '172.16.128.100' (ED25519) to the list of known hosts.
+vagrant@172.16.128.100's password:
+
+This system is built by the Bento project by Chef Software
+More information can be found at https://github.com/chef/bento
+Last login: Mon Oct 21 10:50:01 2024 from 172.16.128.253
+[vagrant@srv100 ~]$ exit
+logout
+Connection to 172.16.128.100 closed.
+[vagrant@control ~]$ ansible -i /vagrant/ansible/inventory.yml -m ping srv100
+srv100 | SUCCESS => {
+    "ansible_facts": {
+        "discovered_interpreter_python": "/usr/bin/python3"
+    },
+    "changed": false,
+    "ping": "pong"
+}
+```
 
 If this works, you can have Ansible lookup all kinds of information about the managed node with the `setup` module:
 
 ```console
 ansible -i inventory.yml -m setup srv100
+```
+
+```bash
+[vagrant@control ~]$ ansible -i /vagrant/ansible/inventory.yml -m setup srv100
+srv100 | SUCCESS => {
+    "ansible_facts": {
+        "ansible_all_ipv4_addresses": [
+            "10.0.2.15",
+            "172.16.128.100"
+        ],
+        "ansible_all_ipv6_addresses": [
+            "fe80::1f1a:4557:a93f:7490",
+            "fe80::a00:27ff:fe06:d45b"
+        ],
+        "ansible_apparmor": {
+            "status": "disabled"
+        },
+        "ansible_architecture": "x86_64",
+        "ansible_bios_date": "12/01/2006",
+        "ansible_bios_vendor": "innotek GmbH",
+        "ansible_bios_version": "VirtualBox",
+        "ansible_board_asset_tag": "NA",
+        "ansible_board_name": "VirtualBox",
+        "ansible_board_serial": "0",
+        "ansible_board_vendor": "Oracle Corporation",
+        "ansible_board_version": "1.2",
+        "ansible_chassis_asset_tag": "NA",
+        "ansible_chassis_serial": "NA",
+        "ansible_chassis_vendor": "Oracle Corporation",
+        "ansible_chassis_version": "NA",
+        "ansible_cmdline": {
+            "BOOT_IMAGE": "(hd0,msdos2)/boot/vmlinuz-5.14.0-70.13.1.el9_0.x86_64",
+            "biosdevname": "0",
+            "crashkernel": "1G-4G:192M,4G-64G:256M,64G-:512M",
+            "net.ifnames": "0",
+            "resume": "UUID=da44adc5-c00c-4bde-9f73-0ea98cf1ed00",
+            "ro": true,
+            "root": "UUID=d5a2770c-db71-434b-b78a-780f37f957f0"
+        },
+        "ansible_date_time": {
+            "date": "2024-10-21",
+            "day": "21",
+            "epoch": "1729508231",
+            "epoch_int": "1729508231",
+            "hour": "10",
+            "iso8601": "2024-10-21T10:57:11Z",
+            "iso8601_basic": "20241021T105711031122",
+            "iso8601_basic_short": "20241021T105711",
+            "iso8601_micro": "2024-10-21T10:57:11.031122Z",
+            "minute": "57",
+            "month": "10",
+            "second": "11",
+            "time": "10:57:11",
+            "tz": "UTC",
+            "tz_dst": "UTC",
+            "tz_offset": "+0000",
+            "weekday": "Monday",
+            "weekday_number": "1",
+            "weeknumber": "43",
+            "year": "2024"
+        },
+        "ansible_default_ipv4": {
+            "address": "10.0.2.15",
+            "alias": "eth0",
+            "broadcast": "10.0.2.255",
+            "gateway": "10.0.2.2",
+            "interface": "eth0",
+            "macaddress": "08:00:27:75:84:0e",
+            "mtu": 1500,
+            "netmask": "255.255.255.0",
+            "network": "10.0.2.0",
+            "prefix": "24",
+            "type": "ether"
+        },
+        "ansible_default_ipv6": {},
+        "ansible_device_links": {
+            "ids": {
+                "sda": [
+                    "ata-VBOX_HARDDISK_VB8eac6ae0-372a742e",
+                    "scsi-0ATA_VBOX_HARDDISK_VB8eac6ae0-372a742e",
+                    "scsi-1ATA_VBOX_HARDDISK_VB8eac6ae0-372a742e",
+                    "scsi-SATA_VBOX_HARDDISK_VB8eac6ae0-372a742e"
+                ],
+                "sda1": [
+                    "ata-VBOX_HARDDISK_VB8eac6ae0-372a742e-part1",
+                    "scsi-0ATA_VBOX_HARDDISK_VB8eac6ae0-372a742e-part1",
+                    "scsi-1ATA_VBOX_HARDDISK_VB8eac6ae0-372a742e-part1",
+                    "scsi-SATA_VBOX_HARDDISK_VB8eac6ae0-372a742e-part1"
+                ],
+                "sda2": [
+                    "ata-VBOX_HARDDISK_VB8eac6ae0-372a742e-part2",
+                    "scsi-0ATA_VBOX_HARDDISK_VB8eac6ae0-372a742e-part2",
+                    "scsi-1ATA_VBOX_HARDDISK_VB8eac6ae0-372a742e-part2",
+                    "scsi-SATA_VBOX_HARDDISK_VB8eac6ae0-372a742e-part2"
+                ]
+            },
+            "labels": {},
+            "masters": {},
+            "uuids": {
+                "sda1": [
+                    "da44adc5-c00c-4bde-9f73-0ea98cf1ed00"
+                ],
+                "sda2": [
+                    "d5a2770c-db71-434b-b78a-780f37f957f0"
+                ]
+            }
+        },
+        "ansible_devices": {
+            "sda": {
+                "holders": [],
+                "host": "",
+                "links": {
+                    "ids": [
+                        "ata-VBOX_HARDDISK_VB8eac6ae0-372a742e",
+                        "scsi-0ATA_VBOX_HARDDISK_VB8eac6ae0-372a742e",
+                        "scsi-1ATA_VBOX_HARDDISK_VB8eac6ae0-372a742e",
+                        "scsi-SATA_VBOX_HARDDISK_VB8eac6ae0-372a742e"
+                    ],
+                    "labels": [],
+                    "masters": [],
+                    "uuids": []
+                },
+                "model": "VBOX HARDDISK",
+                "partitions": {
+                    "sda1": {
+                        "holders": [],
+                        "links": {
+                            "ids": [
+                                "ata-VBOX_HARDDISK_VB8eac6ae0-372a742e-part1",
+                                "scsi-0ATA_VBOX_HARDDISK_VB8eac6ae0-372a742e-part1",
+                                "scsi-1ATA_VBOX_HARDDISK_VB8eac6ae0-372a742e-part1",
+                                "scsi-SATA_VBOX_HARDDISK_VB8eac6ae0-372a742e-part1"
+                            ],
+                            "labels": [],
+                            "masters": [],
+                            "uuids": [
+                                "da44adc5-c00c-4bde-9f73-0ea98cf1ed00"
+                            ]
+                        },
+                        "sectors": "4458496",
+                        "sectorsize": 512,
+                        "size": "2.13 GB",
+                        "start": "2048",
+                        "uuid": "da44adc5-c00c-4bde-9f73-0ea98cf1ed00"
+                    },
+                    "sda2": {
+                        "holders": [],
+                        "links": {
+                            "ids": [
+                                "ata-VBOX_HARDDISK_VB8eac6ae0-372a742e-part2",
+                                "scsi-0ATA_VBOX_HARDDISK_VB8eac6ae0-372a742e-part2",
+                                "scsi-1ATA_VBOX_HARDDISK_VB8eac6ae0-372a742e-part2",
+                                "scsi-SATA_VBOX_HARDDISK_VB8eac6ae0-372a742e-part2"
+                            ],
+                            "labels": [],
+                            "masters": [],
+                            "uuids": [
+                                "d5a2770c-db71-434b-b78a-780f37f957f0"
+                            ]
+                        },
+                        "sectors": "129757184",
+                        "sectorsize": 512,
+                        "size": "61.87 GB",
+                        "start": "4460544",
+                        "uuid": "d5a2770c-db71-434b-b78a-780f37f957f0"
+                    }
+                },
+                "removable": "0",
+                "rotational": "1",
+                "sas_address": null,
+                "sas_device_handle": null,
+                "scheduler_mode": "mq-deadline",
+                "sectors": "134217728",
+                "sectorsize": "512",
+                "serial": "VB8eac6ae0",
+                "size": "64.00 GB",
+                "support_discard": "0",
+                "vendor": "ATA",
+                "virtual": 1
+            }
+        },
+        "ansible_distribution": "AlmaLinux",
+        "ansible_distribution_file_parsed": true,
+        "ansible_distribution_file_path": "/etc/redhat-release",
+        "ansible_distribution_file_variety": "RedHat",
+        "ansible_distribution_major_version": "9",
+        "ansible_distribution_release": "Emerald Puma",
+        "ansible_distribution_version": "9.0",
+        "ansible_dns": {
+            "nameservers": [
+                "10.0.2.3"
+            ],
+            "options": {
+                "single-request-reopen": true
+            },
+            "search": [
+                "addelijn.be"
+            ]
+        },
+        "ansible_domain": "",
+        "ansible_effective_group_id": 0,
+        "ansible_effective_user_id": 0,
+        "ansible_env": {
+            "HOME": "/root",
+            "LANG": "en_US.UTF-8",
+            "LOGNAME": "root",
+            "LS_COLORS": "rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=01;37;41:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=01;36:*.au=01;36:*.flac=01;36:*.m4a=01;36:*.mid=01;36:*.midi=01;36:*.mka=01;36:*.mp3=01;36:*.mpc=01;36:*.ogg=01;36:*.ra=01;36:*.wav=01;36:*.oga=01;36:*.opus=01;36:*.spx=01;36:*.xspf=01;36:",
+            "MAIL": "/var/mail/root",
+            "PATH": "/sbin:/bin:/usr/sbin:/usr/bin",
+            "PWD": "/home/vagrant",
+            "SHELL": "/bin/bash",
+            "SHLVL": "0",
+            "SUDO_COMMAND": "/bin/sh -c echo BECOME-SUCCESS-chbyjosqshwmjuphxdipmbvelqvrhnkf ; /usr/bin/python3 /home/vagrant/.ansible/tmp/ansible-tmp-1729508229.83872-1349-19846530961370/AnsiballZ_setup.py",
+            "SUDO_GID": "1000",
+            "SUDO_UID": "1000",
+            "SUDO_USER": "vagrant",
+            "TERM": "xterm-256color",
+            "USER": "root",
+            "_": "/usr/bin/python3"
+        },
+        "ansible_eth0": {
+            "active": true,
+            "device": "eth0",
+            "features": {
+                "esp_hw_offload": "off [fixed]",
+                "esp_tx_csum_hw_offload": "off [fixed]",
+                "fcoe_mtu": "off [fixed]",
+                "generic_receive_offload": "on",
+                "generic_segmentation_offload": "on",
+                "highdma": "off [fixed]",
+                "hsr_dup_offload": "off [fixed]",
+                "hsr_fwd_offload": "off [fixed]",
+                "hsr_tag_ins_offload": "off [fixed]",
+                "hsr_tag_rm_offload": "off [fixed]",
+                "hw_tc_offload": "off [fixed]",
+                "l2_fwd_offload": "off [fixed]",
+                "large_receive_offload": "off [fixed]",
+                "loopback": "off [fixed]",
+                "macsec_hw_offload": "off [fixed]",
+                "netns_local": "off [fixed]",
+                "ntuple_filters": "off [fixed]",
+                "receive_hashing": "off [fixed]",
+                "rx_all": "off",
+                "rx_checksumming": "off",
+                "rx_fcs": "off",
+                "rx_gro_hw": "off [fixed]",
+                "rx_gro_list": "off",
+                "rx_udp_gro_forwarding": "off",
+                "rx_udp_tunnel_port_offload": "off [fixed]",
+                "rx_vlan_filter": "on [fixed]",
+                "rx_vlan_offload": "on",
+                "rx_vlan_stag_filter": "off [fixed]",
+                "rx_vlan_stag_hw_parse": "off [fixed]",
+                "scatter_gather": "on",
+                "tcp_segmentation_offload": "on",
+                "tls_hw_record": "off [fixed]",
+                "tls_hw_rx_offload": "off [fixed]",
+                "tls_hw_tx_offload": "off [fixed]",
+                "tx_checksum_fcoe_crc": "off [fixed]",
+                "tx_checksum_ip_generic": "on",
+                "tx_checksum_ipv4": "off [fixed]",
+                "tx_checksum_ipv6": "off [fixed]",
+                "tx_checksum_sctp": "off [fixed]",
+                "tx_checksumming": "on",
+                "tx_esp_segmentation": "off [fixed]",
+                "tx_fcoe_segmentation": "off [fixed]",
+                "tx_gre_csum_segmentation": "off [fixed]",
+                "tx_gre_segmentation": "off [fixed]",
+                "tx_gso_list": "off [fixed]",
+                "tx_gso_partial": "off [fixed]",
+                "tx_gso_robust": "off [fixed]",
+                "tx_ipxip4_segmentation": "off [fixed]",
+                "tx_ipxip6_segmentation": "off [fixed]",
+                "tx_lockless": "off [fixed]",
+                "tx_nocache_copy": "off",
+                "tx_scatter_gather": "on",
+                "tx_scatter_gather_fraglist": "off [fixed]",
+                "tx_sctp_segmentation": "off [fixed]",
+                "tx_tcp6_segmentation": "off [fixed]",
+                "tx_tcp_ecn_segmentation": "off [fixed]",
+                "tx_tcp_mangleid_segmentation": "off",
+                "tx_tcp_segmentation": "on",
+                "tx_tunnel_remcsum_segmentation": "off [fixed]",
+                "tx_udp_segmentation": "off [fixed]",
+                "tx_udp_tnl_csum_segmentation": "off [fixed]",
+                "tx_udp_tnl_segmentation": "off [fixed]",
+                "tx_vlan_offload": "on [fixed]",
+                "tx_vlan_stag_hw_insert": "off [fixed]",
+                "vlan_challenged": "off [fixed]"
+            },
+            "hw_timestamp_filters": [],
+            "ipv4": {
+                "address": "10.0.2.15",
+                "broadcast": "10.0.2.255",
+                "netmask": "255.255.255.0",
+                "network": "10.0.2.0",
+                "prefix": "24"
+            },
+            "ipv6": [
+                {
+                    "address": "fe80::1f1a:4557:a93f:7490",
+                    "prefix": "64",
+                    "scope": "link"
+                }
+            ],
+            "macaddress": "08:00:27:75:84:0e",
+            "module": "e1000",
+            "mtu": 1500,
+            "pciid": "0000:00:03.0",
+            "promisc": false,
+            "speed": 1000,
+            "timestamping": [],
+            "type": "ether"
+        },
+        "ansible_eth1": {
+            "active": true,
+            "device": "eth1",
+            "features": {
+                "esp_hw_offload": "off [fixed]",
+                "esp_tx_csum_hw_offload": "off [fixed]",
+                "fcoe_mtu": "off [fixed]",
+                "generic_receive_offload": "on",
+                "generic_segmentation_offload": "on",
+                "highdma": "off [fixed]",
+                "hsr_dup_offload": "off [fixed]",
+                "hsr_fwd_offload": "off [fixed]",
+                "hsr_tag_ins_offload": "off [fixed]",
+                "hsr_tag_rm_offload": "off [fixed]",
+                "hw_tc_offload": "off [fixed]",
+                "l2_fwd_offload": "off [fixed]",
+                "large_receive_offload": "off [fixed]",
+                "loopback": "off [fixed]",
+                "macsec_hw_offload": "off [fixed]",
+                "netns_local": "off [fixed]",
+                "ntuple_filters": "off [fixed]",
+                "receive_hashing": "off [fixed]",
+                "rx_all": "off",
+                "rx_checksumming": "off",
+                "rx_fcs": "off",
+                "rx_gro_hw": "off [fixed]",
+                "rx_gro_list": "off",
+                "rx_udp_gro_forwarding": "off",
+                "rx_udp_tunnel_port_offload": "off [fixed]",
+                "rx_vlan_filter": "on [fixed]",
+                "rx_vlan_offload": "on",
+                "rx_vlan_stag_filter": "off [fixed]",
+                "rx_vlan_stag_hw_parse": "off [fixed]",
+                "scatter_gather": "on",
+                "tcp_segmentation_offload": "on",
+                "tls_hw_record": "off [fixed]",
+                "tls_hw_rx_offload": "off [fixed]",
+                "tls_hw_tx_offload": "off [fixed]",
+                "tx_checksum_fcoe_crc": "off [fixed]",
+                "tx_checksum_ip_generic": "on",
+                "tx_checksum_ipv4": "off [fixed]",
+                "tx_checksum_ipv6": "off [fixed]",
+                "tx_checksum_sctp": "off [fixed]",
+                "tx_checksumming": "on",
+                "tx_esp_segmentation": "off [fixed]",
+                "tx_fcoe_segmentation": "off [fixed]",
+                "tx_gre_csum_segmentation": "off [fixed]",
+                "tx_gre_segmentation": "off [fixed]",
+                "tx_gso_list": "off [fixed]",
+                "tx_gso_partial": "off [fixed]",
+                "tx_gso_robust": "off [fixed]",
+                "tx_ipxip4_segmentation": "off [fixed]",
+                "tx_ipxip6_segmentation": "off [fixed]",
+                "tx_lockless": "off [fixed]",
+                "tx_nocache_copy": "off",
+                "tx_scatter_gather": "on",
+                "tx_scatter_gather_fraglist": "off [fixed]",
+                "tx_sctp_segmentation": "off [fixed]",
+                "tx_tcp6_segmentation": "off [fixed]",
+                "tx_tcp_ecn_segmentation": "off [fixed]",
+                "tx_tcp_mangleid_segmentation": "off",
+                "tx_tcp_segmentation": "on",
+                "tx_tunnel_remcsum_segmentation": "off [fixed]",
+                "tx_udp_segmentation": "off [fixed]",
+                "tx_udp_tnl_csum_segmentation": "off [fixed]",
+                "tx_udp_tnl_segmentation": "off [fixed]",
+                "tx_vlan_offload": "on [fixed]",
+                "tx_vlan_stag_hw_insert": "off [fixed]",
+                "vlan_challenged": "off [fixed]"
+            },
+            "hw_timestamp_filters": [],
+            "ipv4": {
+                "address": "172.16.128.100",
+                "broadcast": "172.16.255.255",
+                "netmask": "255.255.0.0",
+                "network": "172.16.0.0",
+                "prefix": "16"
+            },
+            "ipv6": [
+                {
+                    "address": "fe80::a00:27ff:fe06:d45b",
+                    "prefix": "64",
+                    "scope": "link"
+                }
+            ],
+            "macaddress": "08:00:27:06:d4:5b",
+            "module": "e1000",
+            "mtu": 1500,
+            "pciid": "0000:00:08.0",
+            "promisc": false,
+            "speed": 1000,
+            "timestamping": [],
+            "type": "ether"
+        },
+        "ansible_fibre_channel_wwn": [],
+        "ansible_fips": false,
+        "ansible_form_factor": "Other",
+        "ansible_fqdn": "srv100",
+        "ansible_hostname": "srv100",
+        "ansible_hostnqn": "",
+        "ansible_interfaces": [
+            "eth0",
+            "lo",
+            "eth1"
+        ],
+        "ansible_is_chroot": false,
+        "ansible_iscsi_iqn": "",
+        "ansible_kernel": "5.14.0-70.13.1.el9_0.x86_64",
+        "ansible_kernel_version": "#1 SMP PREEMPT Tue May 17 15:53:11 EDT 2022",
+        "ansible_lo": {
+            "active": true,
+            "device": "lo",
+            "features": {
+                "esp_hw_offload": "off [fixed]",
+                "esp_tx_csum_hw_offload": "off [fixed]",
+                "fcoe_mtu": "off [fixed]",
+                "generic_receive_offload": "on",
+                "generic_segmentation_offload": "on",
+                "highdma": "on [fixed]",
+                "hsr_dup_offload": "off [fixed]",
+                "hsr_fwd_offload": "off [fixed]",
+                "hsr_tag_ins_offload": "off [fixed]",
+                "hsr_tag_rm_offload": "off [fixed]",
+                "hw_tc_offload": "off [fixed]",
+                "l2_fwd_offload": "off [fixed]",
+                "large_receive_offload": "off [fixed]",
+                "loopback": "on [fixed]",
+                "macsec_hw_offload": "off [fixed]",
+                "netns_local": "on [fixed]",
+                "ntuple_filters": "off [fixed]",
+                "receive_hashing": "off [fixed]",
+                "rx_all": "off [fixed]",
+                "rx_checksumming": "on [fixed]",
+                "rx_fcs": "off [fixed]",
+                "rx_gro_hw": "off [fixed]",
+                "rx_gro_list": "off",
+                "rx_udp_gro_forwarding": "off",
+                "rx_udp_tunnel_port_offload": "off [fixed]",
+                "rx_vlan_filter": "off [fixed]",
+                "rx_vlan_offload": "off [fixed]",
+                "rx_vlan_stag_filter": "off [fixed]",
+                "rx_vlan_stag_hw_parse": "off [fixed]",
+                "scatter_gather": "on",
+                "tcp_segmentation_offload": "on",
+                "tls_hw_record": "off [fixed]",
+                "tls_hw_rx_offload": "off [fixed]",
+                "tls_hw_tx_offload": "off [fixed]",
+                "tx_checksum_fcoe_crc": "off [fixed]",
+                "tx_checksum_ip_generic": "on [fixed]",
+                "tx_checksum_ipv4": "off [fixed]",
+                "tx_checksum_ipv6": "off [fixed]",
+                "tx_checksum_sctp": "on [fixed]",
+                "tx_checksumming": "on",
+                "tx_esp_segmentation": "off [fixed]",
+                "tx_fcoe_segmentation": "off [fixed]",
+                "tx_gre_csum_segmentation": "off [fixed]",
+                "tx_gre_segmentation": "off [fixed]",
+                "tx_gso_list": "on",
+                "tx_gso_partial": "off [fixed]",
+                "tx_gso_robust": "off [fixed]",
+                "tx_ipxip4_segmentation": "off [fixed]",
+                "tx_ipxip6_segmentation": "off [fixed]",
+                "tx_lockless": "on [fixed]",
+                "tx_nocache_copy": "off [fixed]",
+                "tx_scatter_gather": "on [fixed]",
+                "tx_scatter_gather_fraglist": "on [fixed]",
+                "tx_sctp_segmentation": "on",
+                "tx_tcp6_segmentation": "on",
+                "tx_tcp_ecn_segmentation": "on",
+                "tx_tcp_mangleid_segmentation": "on",
+                "tx_tcp_segmentation": "on",
+                "tx_tunnel_remcsum_segmentation": "off [fixed]",
+                "tx_udp_segmentation": "on",
+                "tx_udp_tnl_csum_segmentation": "off [fixed]",
+                "tx_udp_tnl_segmentation": "off [fixed]",
+                "tx_vlan_offload": "off [fixed]",
+                "tx_vlan_stag_hw_insert": "off [fixed]",
+                "vlan_challenged": "on [fixed]"
+            },
+            "hw_timestamp_filters": [],
+            "ipv4": {
+                "address": "127.0.0.1",
+                "broadcast": "",
+                "netmask": "255.0.0.0",
+                "network": "127.0.0.0",
+                "prefix": "8"
+            },
+            "ipv6": [
+                {
+                    "address": "::1",
+                    "prefix": "128",
+                    "scope": "host"
+                }
+            ],
+            "mtu": 65536,
+            "promisc": false,
+            "timestamping": [],
+            "type": "loopback"
+        },
+        "ansible_loadavg": {
+            "15m": 0.0,
+            "1m": 0.0,
+            "5m": 0.0
+        },
+        "ansible_local": {},
+        "ansible_locally_reachable_ips": {
+            "ipv4": [
+                "10.0.2.15",
+                "127.0.0.0/8",
+                "127.0.0.1",
+                "172.16.128.100"
+            ],
+            "ipv6": [
+                "::1",
+                "fe80::a00:27ff:fe06:d45b",
+                "fe80::1f1a:4557:a93f:7490"
+            ]
+        },
+        "ansible_lsb": {},
+        "ansible_lvm": "N/A",
+        "ansible_machine": "x86_64",
+        "ansible_machine_id": "067df0216f79413fa48a53e382be47fc",
+        "ansible_memfree_mb": 677,
+        "ansible_memory_mb": {
+            "nocache": {
+                "free": 795,
+                "used": 165
+            },
+            "real": {
+                "free": 677,
+                "total": 960,
+                "used": 283
+            },
+            "swap": {
+                "cached": 0,
+                "free": 2176,
+                "total": 2176,
+                "used": 0
+            }
+        },
+        "ansible_memtotal_mb": 960,
+        "ansible_mounts": [
+            {
+                "block_available": 15906232,
+                "block_size": 4096,
+                "block_total": 16211729,
+                "block_used": 305497,
+                "device": "/dev/sda2",
+                "fstype": "xfs",
+                "inode_available": 32413363,
+                "inode_total": 32439296,
+                "inode_used": 25933,
+                "mount": "/",
+                "options": "rw,seclabel,relatime,attr2,inode64,logbufs=8,logbsize=32k,noquota",
+                "size_available": 65151926272,
+                "size_total": 66403241984,
+                "uuid": "d5a2770c-db71-434b-b78a-780f37f957f0"
+            }
+        ],
+        "ansible_nodename": "srv100",
+        "ansible_os_family": "RedHat",
+        "ansible_pkg_mgr": "dnf",
+        "ansible_proc_cmdline": {
+            "BOOT_IMAGE": "(hd0,msdos2)/boot/vmlinuz-5.14.0-70.13.1.el9_0.x86_64",
+            "biosdevname": "0",
+            "crashkernel": "1G-4G:192M,4G-64G:256M,64G-:512M",
+            "net.ifnames": "0",
+            "resume": "UUID=da44adc5-c00c-4bde-9f73-0ea98cf1ed00",
+            "ro": true,
+            "root": "UUID=d5a2770c-db71-434b-b78a-780f37f957f0"
+        },
+        "ansible_processor": [
+            "0",
+            "GenuineIntel",
+            "11th Gen Intel(R) Core(TM) i7-1165G7 @ 2.80GHz",
+            "1",
+            "GenuineIntel",
+            "11th Gen Intel(R) Core(TM) i7-1165G7 @ 2.80GHz"
+        ],
+        "ansible_processor_cores": 2,
+        "ansible_processor_count": 1,
+        "ansible_processor_nproc": 2,
+        "ansible_processor_threads_per_core": 1,
+        "ansible_processor_vcpus": 2,
+        "ansible_product_name": "VirtualBox",
+        "ansible_product_serial": "0",
+        "ansible_product_uuid": "9991bc6b-fa40-8446-8c87-b258642e6a0f",
+        "ansible_product_version": "1.2",
+        "ansible_python": {
+            "executable": "/usr/bin/python3",
+            "has_sslcontext": true,
+            "type": "cpython",
+            "version": {
+                "major": 3,
+                "micro": 10,
+                "minor": 9,
+                "releaselevel": "final",
+                "serial": 0
+            },
+            "version_info": [
+                3,
+                9,
+                10,
+                "final",
+                0
+            ]
+        },
+        "ansible_python_version": "3.9.10",
+        "ansible_real_group_id": 0,
+        "ansible_real_user_id": 0,
+        "ansible_selinux": {
+            "config_mode": "permissive",
+            "mode": "permissive",
+            "policyvers": 33,
+            "status": "enabled",
+            "type": "targeted"
+        },
+        "ansible_selinux_python_present": true,
+        "ansible_service_mgr": "systemd",
+        "ansible_ssh_host_key_ecdsa_public": "AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBHI6n0rJI4AlZ9eQ8ncDkwgX0rVA7u7xUdD+NSdnOfF5zADYbLkdSPv3wBMTqAb/uJrTsfKkIkp/tg7UARih8Y8=",
+        "ansible_ssh_host_key_ecdsa_public_keytype": "ecdsa-sha2-nistp256",
+        "ansible_ssh_host_key_ed25519_public": "AAAAC3NzaC1lZDI1NTE5AAAAIGQzBJQb/qgJ4LNbTeQxjnLHH1OGshIng0WCHjX+yAcB",
+        "ansible_ssh_host_key_ed25519_public_keytype": "ssh-ed25519",
+        "ansible_ssh_host_key_rsa_public": "AAAAB3NzaC1yc2EAAAADAQABAAABgQDDXVV2xBWkPTnrzut1+7YGDBTTzjBmY9JdvdN4TzVPjCDGsHPRk5JkUTGLhb5AbZObrVXpcirYwVfTkcPiBTJFd32YrT2xm8SDxnQ0gql98aNFwiMkdrg2lQpvmfl//tiPG7GyGSKSL0gAZjlAj1HvY7Utp80ZP2C6afwhjgRlqHr+w3+8byocuAAMkyWKmqBroqcKoNo+IhqMGIyW49snlw04solvbxm/R/kmDubDM8d36dfSp3TvGcp2W7JDv4kRIRVuRJOESIQPabQQOHrZlj12ShPSF27y6TUr1YvYrBPgmoriHvi8woOHPvQY5mtn1y1Q94E1jH70Sv/CiLPW0/2GSjaxBbCXAYV4B7cUqpyiVEQ2kRP0UEZEGLSVrmF5N93JGqK269W0iGiUDsFDfqfiJ7IVkajR7xwdFDD3S8GXtVE5xV0J0MYcMNUagKuxqsHTm0T6wkmCTvzYR3VGMAGQ60ZXjLwkvbgrnsxxd8j7RPhM3G6SjbObNfslOmE=",
+        "ansible_ssh_host_key_rsa_public_keytype": "ssh-rsa",
+        "ansible_swapfree_mb": 2176,
+        "ansible_swaptotal_mb": 2176,
+        "ansible_system": "Linux",
+        "ansible_system_capabilities": [],
+        "ansible_system_capabilities_enforced": "False",
+        "ansible_system_vendor": "innotek GmbH",
+        "ansible_uptime_seconds": 3207,
+        "ansible_user_dir": "/root",
+        "ansible_user_gecos": "root",
+        "ansible_user_gid": 0,
+        "ansible_user_id": "root",
+        "ansible_user_shell": "/bin/bash",
+        "ansible_user_uid": 0,
+        "ansible_userspace_architecture": "x86_64",
+        "ansible_userspace_bits": "64",
+        "ansible_virtualization_role": "guest",
+        "ansible_virtualization_tech_guest": [
+            "virtualbox"
+        ],
+        "ansible_virtualization_tech_host": [],
+        "ansible_virtualization_type": "virtualbox",
+        "discovered_interpreter_python": "/usr/bin/python3",
+        "gather_subset": [
+            "all"
+        ],
+        "module_setup": true
+    },
+    "changed": false
+}
 ```
 
 The result will be a long list of facts about the managed node. You can also limit the output to a specific fact by specifying the fact name with the `-a` option:
@@ -1007,7 +1954,69 @@ The result will be a long list of facts about the managed node. You can also lim
 ansible -i inventory.yml -m setup -a "filter=ansible_distribution*" srv100
 ```
 
+```bash
+[vagrant@control ~]$ ansible -i /vagrant/ansible/inventory.yml -m setup -a "filter=ansible_distribution*" srv100
+srv100 | SUCCESS => {
+    "ansible_facts": {
+        "ansible_distribution": "AlmaLinux",
+        "ansible_distribution_file_parsed": true,
+        "ansible_distribution_file_path": "/etc/redhat-release",
+        "ansible_distribution_file_variety": "RedHat",
+        "ansible_distribution_major_version": "9",
+        "ansible_distribution_release": "Emerald Puma",
+        "ansible_distribution_version": "9.0",
+        "discovered_interpreter_python": "/usr/bin/python3"
+    },
+    "changed": false
+}
+```
+
 **Remark:** From here on out, you can assume that the command `vagrant` should always be executed from your physical system, in your preferred shell (Bash, Git Bash, PowerShell, ...) and from the directory `vmlabs/` (containing the file `Vagrantfile`). All Ansible commands should be executed from within the control node, from the directory `/vagrant/ansible/` (containing the `site.yml` playbook).
+
+`Working with the inventory file offcourse is better so let's try to implement this too.`
+
+```bash
+[vagrant@control ~]$ ansible -i /vagrant/ansible/inventory_pk.yml -m ping srv100
+srv100 | UNREACHABLE! => {
+    "changed": false,
+    "msg": "Failed to connect to the host via ssh: vagrant@172.16.128.100: Permission denied (publickey,gssapi-keyex,gssapi-with-mic,password).",
+    "unreachable": true
+}
+```
+
+`Solution: copy pk and adjust visibility`
+
+```bash
+[vagrant@control ~]$ mkdir -p /home/vagrant/keys/srv100
+[vagrant@control ~]$ cp /vagrant/.vagrant/machines/srv100/virtualbox/private_key /home/vagrant/keys/srv100/
+[vagrant@control ~]$ chmod -R 700 /home/vagrant/keys/
+```
+
+`Adjusting the inventory to find this new file`
+
+```bash
+[vagrant@control ~]$ cat /vagrant/ansible/inventory_pk.yml
+---
+servers:
+  vars:
+    ansible_user: vagrant
+    ansible_become: true
+  hosts:
+    srv100:
+      ansible_ssh_private_key_file: /home/vagrant/keys/srv100/private_key
+      ansible_host: 172.16.128.100
+
+[vagrant@control ~]$ ansible -i /vagrant/ansible/inventory_pk.yml -m ping srv100
+srv100 | SUCCESS => {
+    "ansible_facts": {
+        "discovered_interpreter_python": "/usr/bin/python3"
+    },
+    "changed": false,
+    "ping": "pong"
+}
+```
+
+`In the 23-24 version i made a script to automate some copying of keys, but that is only safe for using with local machines, not for publicly exposed, where automating access will have to take another route.`
 
 ## 2.3 Applying a role to a managed node
 
