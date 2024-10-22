@@ -2971,15 +2971,196 @@ The first step is to install the MariaDB database server, the Apache web server 
 
 **Pay attention!** Since these packages are only needed on `srv100`, you should *not* specify them in `servers.yml`. Instead, create a file called `ansible/host_vars/srv100.yml` and define the variable `rhbase_install_packages` there. It is important to realise that we now have two places where `rhbase_install_packages` is defined. Ansible will choose the most specific one, i.e. the one defined in `host_vars/srv100.yml`. That means that you should add the packages specified in `servers.yml` to the list in `host_vars/srv100.yml`!
 
+```bash
+[vagrant@control ~]$ mkdir /vagrant/ansible/host_vars
+[vagrant@control ~]$ cat /vagrant/ansible/host_vars/srv100.yml
+#srv100.yml
+---
+rhbase_install_packages:
+  - bash-completion
+  - vim-enhanced
+  - bind-utils
+  - git
+  - nano
+  - setroubleshoot-server
+  - tree
+  - wget
+  - mariadb-server
+  - httpd
+  - mod_ssl
+  - php
+  - php-mysqlnd
+```
+
 At this point you can run the site playbook again to see if all packages are installed correctly.
+
+```bash
+[vagrant@control ~]$ ansible srv100 -i /vagrant/ansible/inventory_pk.yml -m shell -a "systemctl status httpd"
+srv100 | FAILED | rc=4 >>
+Unit httpd.service could not be found.non-zero return code
+[vagrant@control ~]$ ansible srv100 -i /vagrant/ansible/inventory_pk.yml -m shell -a "systemctl status mariadb"
+srv100 | FAILED | rc=4 >>
+Unit mariadb.service could not be found.non-zero return code
+[vagrant@control ~]$ ansible-playbook -i /vagrant/ansible/inventory_pk.yml /vagrant/ansible/site.yml > /tmp/test.log; sed -n '/PLAY RECAP/,$p' /tmp/test.log
+PLAY RECAP *********************************************************************
+srv100                     : ok=34   changed=1    unreachable=0    failed=0    skipped=15   rescued=0    ignored=0
+
+[vagrant@control ~]$ ansible srv100 -i /vagrant/ansible/inventory_pk.yml -m shell -a "systemctl status httpd"
+srv100 | FAILED | rc=3 >>
+○ httpd.service - The Apache HTTP Server
+     Loaded: loaded (/usr/lib/systemd/system/httpd.service; disabled; vendor preset: disabled)
+    Drop-In: /usr/lib/systemd/system/httpd.service.d
+             └─php-fpm.conf
+     Active: inactive (dead)
+       Docs: man:httpd.service(8)non-zero return code
+[vagrant@control ~]$ ansible srv100 -i /vagrant/ansible/inventory_pk.yml -m shell -a "systemctl status mariadb"
+srv100 | FAILED | rc=3 >>
+○ mariadb.service - MariaDB 10.5 database server
+     Loaded: loaded (/usr/lib/systemd/system/mariadb.service; disabled; vendor preset: disabled)
+     Active: inactive (dead)
+       Docs: man:mariadbd(8)
+             https://mariadb.com/kb/en/library/systemd/non-zero return code
+```
 
 ### 2.4.2. Make services available
 
 The next step is to make sure that MariaDB and Apache are running and that they will be enabled at boot. Look up the correct variables in the role documentation and set them in `host_vars/srv100.yml`.
 
+```bash
+[vagrant@control ~]$ cat /vagrant/ansible/host_vars/srv100.yml | tail -3
+rhbase_start_services:
+  - mariadb
+  - httpd
+[vagrant@control ~]$ ansible-playbook -i /vagrant/ansible/inventory_pk.yml /vagrant/ansible/site.yml > /tmp/test.log; sed -n '/PLAY RECAP/,$p' /tmp/test.log
+PLAY RECAP *********************************************************************
+srv100                     : ok=35   changed=1    unreachable=0    failed=0    skipped=14   rescued=0    ignored=0
+
+[vagrant@control ~]$ ansible srv100 -i /vagrant/ansible/inventory_pk.yml -m shell -a "systemctl status httpd"
+srv100 | CHANGED | rc=0 >>
+● httpd.service - The Apache HTTP Server
+     Loaded: loaded (/usr/lib/systemd/system/httpd.service; enabled; vendor preset: disabled)
+    Drop-In: /usr/lib/systemd/system/httpd.service.d
+             └─php-fpm.conf
+     Active: active (running) since Tue 2024-10-22 09:04:42 UTC; 27s ago
+       Docs: man:httpd.service(8)
+   Main PID: 16843 (httpd)
+     Status: "Total requests: 0; Idle/Busy workers 100/0;Requests/sec: 0; Bytes served/sec:   0 B/sec"
+      Tasks: 177 (limit: 5923)
+     Memory: 23.1M
+        CPU: 108ms
+     CGroup: /system.slice/httpd.service
+             ├─16843 /usr/sbin/httpd -DFOREGROUND
+             ├─16844 /usr/sbin/httpd -DFOREGROUND
+             ├─16845 /usr/sbin/httpd -DFOREGROUND
+             ├─16846 /usr/sbin/httpd -DFOREGROUND
+             └─16847 /usr/sbin/httpd -DFOREGROUND
+
+Oct 22 09:04:42 srv100 systemd[1]: Starting The Apache HTTP Server...
+Oct 22 09:04:42 srv100 httpd[16843]: AH00558: httpd: Could not reliably determine the server's fully qualified domain name, using 127.0.1.1. Set the 'ServerName' directive globally to suppress this message
+Oct 22 09:04:42 srv100 httpd[16843]: Server configured, listening on: port 443, port 80
+Oct 22 09:04:42 srv100 systemd[1]: Started The Apache HTTP Server.
+[vagrant@control ~]$ ansible srv100 -i /vagrant/ansible/inventory_pk.yml -m shell -a "systemctl status mariadb"
+srv100 | CHANGED | rc=0 >>
+● mariadb.service - MariaDB 10.5 database server
+     Loaded: loaded (/usr/lib/systemd/system/mariadb.service; enabled; vendor preset: disabled)
+     Active: active (running) since Tue 2024-10-22 09:04:40 UTC; 41s ago
+       Docs: man:mariadbd(8)
+             https://mariadb.com/kb/en/library/systemd/
+   Main PID: 16666 (mariadbd)
+     Status: "Taking your SQL requests now..."
+      Tasks: 14 (limit: 5923)
+     Memory: 74.8M
+        CPU: 470ms
+     CGroup: /system.slice/mariadb.service
+             └─16666 /usr/libexec/mariadbd --basedir=/usr
+
+Oct 22 09:04:40 srv100 mariadb-prepare-db-dir[16622]: The second is mysql@localhost, it has no password either, but
+Oct 22 09:04:40 srv100 mariadb-prepare-db-dir[16622]: you need to be the system 'mysql' user to connect.
+Oct 22 09:04:40 srv100 mariadb-prepare-db-dir[16622]: After connecting you can set the password, if you would need to be
+Oct 22 09:04:40 srv100 mariadb-prepare-db-dir[16622]: able to connect as any of these users with a password and without sudo
+Oct 22 09:04:40 srv100 mariadb-prepare-db-dir[16622]: See the MariaDB Knowledgebase at https://mariadb.com/kb
+Oct 22 09:04:40 srv100 mariadb-prepare-db-dir[16622]: Please report any problems at https://mariadb.org/jira
+Oct 22 09:04:40 srv100 mariadb-prepare-db-dir[16622]: The latest information about MariaDB is available at https://mariadb.org/.
+Oct 22 09:04:40 srv100 mariadb-prepare-db-dir[16622]: Consider joining MariaDB's strong and vibrant community:
+Oct 22 09:04:40 srv100 mariadb-prepare-db-dir[16622]: https://mariadb.org/get-involved/
+Oct 22 09:04:40 srv100 systemd[1]: Started MariaDB 10.5 database server.
+```
+
 The `rh-base` role also supports configuring the firewall. Ensure that the firewall is configured so that the web server is accessible from the outside world. *Note:* it's best practice to specify *services* allowed through the firewall rather than *port numbers*. Remark that the MariaDB service should *not* be exposed to the outside world! It is only used by the PHP application running on the server itself.
 
+```bash
+[vagrant@control ~]$ cat /vagrant/ansible/host_vars/srv100.yml | tail -3
+rhbase_firewall_allow_services:
+  - http
+  - https
+[vagrant@control ~]$ ansible srv100 -i /vagrant/ansible/inventory_pk.yml -m shell -a "firewall-cmd --list-all"
+srv100 | CHANGED | rc=0 >>
+public (active)
+  target: default
+  icmp-block-inversion: no
+  interfaces: eth0 eth1
+  sources:
+  services: cockpit dhcpv6-client ssh
+  ports:
+  protocols:
+  forward: yes
+  masquerade: no
+  forward-ports:
+  source-ports:
+  icmp-blocks:
+  rich rules:
+```
+
 Run the playbook again and check the result. Can you access the default web page at <http://172.16.128.100> *and* <https://172.16.128.100>? Is the database server running and can you open a console with `sudo mysql`?
+
+```bash
+[vagrant@control ~]$ ansible-playbook -i /vagrant/ansible/inventory_pk.yml /vagrant/ansible/site.yml > /tmp/test.log; sed -n '/PLAY RECAP/,$p' /tmp/test.log
+PLAY RECAP *********************************************************************
+srv100                     : ok=37   changed=2    unreachable=0    failed=0    skipped=13   rescued=0    ignored=0
+
+[vagrant@control ~]$ ansible srv100 -i /vagrant/ansible/inventory_pk.yml -m shell -a "firewall-cmd --list-all"
+srv100 | CHANGED | rc=0 >>
+public (active)
+  target: default
+  icmp-block-inversion: no
+  interfaces: eth0 eth1
+  sources:
+  services: cockpit dhcpv6-client http https ssh
+  ports:
+  protocols:
+  forward: yes
+  masquerade: no
+  forward-ports:
+  source-ports:
+  icmp-blocks:
+  rich rules:
+```
+
+![203_http_ok](img/203_http_ok.PNG)
+
+![204_https_warning](img/204_https_warning.PNG)
+
+![205_https_ok](img/205_https_ok.PNG)
+
+```bash
+[vagrant@control ~]$ ssh vagrant@172.16.128.100
+vagrant@172.16.128.100's password:
+
+This system is built by the Bento project by Chef Software
+More information can be found at https://github.com/chef/bento
+Last login: Tue Oct 22 09:19:48 2024 from 172.16.128.253
+[vagrant@srv100 ~]$ sudo mysql
+Welcome to the MariaDB monitor.  Commands end with ; or \g.
+Your MariaDB connection id is 3
+Server version: 10.5.22-MariaDB MariaDB Server
+
+Copyright (c) 2000, 2018, Oracle, MariaDB Corporation Ab and others.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+MariaDB [(none)]> exit
+Bye
+```
 
 ### 2.4.3. PHP application
 

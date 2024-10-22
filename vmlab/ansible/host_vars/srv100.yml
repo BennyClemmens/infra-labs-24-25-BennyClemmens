@@ -1,0 +1,22 @@
+#srv100.yml
+---
+rhbase_install_packages:
+  - bash-completion
+  - vim-enhanced
+  - bind-utils
+  - git
+  - nano
+  - setroubleshoot-server
+  - tree
+  - wget
+  - mariadb-server
+  - httpd
+  - mod_ssl
+  - php
+  - php-mysqlnd
+rhbase_start_services:
+  - mariadb
+  - httpd
+rhbase_firewall_allow_services:
+  - http
+  - https
