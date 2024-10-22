@@ -3814,9 +3814,65 @@ srv100                     : ok=50   changed=4    unreachable=0    failed=0    s
 
 If you run the playbook again, you will notice that the database is re-initialised. Unfortunately, the `mysql_db` module is not *idempotent* when you use the import option. This means that the module will always execute the import script, even if the database already exists. This is not what we want! We only want to execute the import script when we first copy the initialisation script to the server.
 
+`Problem:`
+
+```bash
+[vagrant@control ~]$ ansible-playbook -i /vagrant/ansible/inventory_pk.yml /vagrant/ansible/site.yml > /tmp/test.log; sed -n '/PLAY RECAP/,$p' /tmp/test.log
+[WARNING]: Option column_case_sensitive is not provided. The default is now
+false, so the column's name will be uppercased. The default will be changed to
+true in community.mysql 4.0.0.
+PLAY RECAP *********************************************************************
+srv100                     : ok=49   changed=1    unreachable=0    failed=0    skipped=17   rescued=0    ignored=0
+```
+
 There are two ways to solve this problem:
 
 - Redefine the task that creates the database as a "handler". When you copy the database script, "notify" the handler. The handler will only be executed when the task is notified. [Read about handlers](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_handlers.html) in the Ansible documentation.
+
+```bash
+[vagrant@control ~]$ cat /vagrant/ansible/site.yml
+# site.yml
+---
+- name: Configure srv100 # Each task should have a name
+  hosts: srv100          # Indicates hosts this applies to (host or group name)
+  roles:                 # Enumerate roles to be applied
+    - bertvv.rh-base
+    - bertvv.httpd
+  tasks:
+    - name: Copy the database creation script (db.sql) to the server
+      ansible.builtin.copy:
+        src: /vagrant/ansible/files/db.sql
+        dest: /tmp/
+      notify:
+        - Initialize database
+    - name: Copy the php script (test.php) to the server and renaming it (index.php)
+      ansible.builtin.copy:
+        src: /vagrant/ansible/files/test.php
+        dest: /var/www/html/index.php
+    - name: Create database user with all database privileges
+      community.mysql.mysql_user:
+        name: "{{ db_user }}"
+        password: "{{ db_password }}"
+        priv: '*.*:ALL'
+        login_unix_socket: /var/lib/mysql/mysql.sock
+  handlers:
+    - name: Initializing the database
+      community.mysql.mysql_db:
+        name: "{{ db_name }}"
+        state: import
+        target: /tmp/db.sql
+        login_unix_socket: /var/lib/mysql/mysql.sock
+```
+
+```bash
+[vagrant@control ~]$ ansible-playbook -i /vagrant/ansible/inventory_pk.yml /vagrant/ansible/site.yml > /tmp/test.log; sed -n '/PLAY RECAP/,$p' /tmp/test.log
+[WARNING]: Option column_case_sensitive is not provided. The default is now
+false, so the column's name will be uppercased. The default will be changed to
+true in community.mysql 4.0.0.
+PLAY RECAP *********************************************************************
+srv100                     : ok=48   changed=0    unreachable=0    failed=0    skipped=17   rescued=0    ignored=0
+```
+
 - In the copy task, use the "register" option to store the result of the task in a variable. Then, in the task that creates the database, use the "when" option to only execute the task when the result has changed. [Read about conditionals](https://docs.ansible.com/ansible/latest/user_guide/playbooks_conditionals.html) in the Ansible documentation.
 
 Implement either method so your playbook becomes idempotent.
