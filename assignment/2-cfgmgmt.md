@@ -3166,6 +3166,139 @@ Bye
 
 The directory `ansible/files` contains an SQL script to initialise the database and a PHP-script that queries a database table and shows the result. In this step, we will install the PHP script and ensure that it works correctly when accessed with a web browser.
 
+```bash
+[vagrant@control ~]$ cat /vagrant/ansible/files/db.sql
+/* Source: https://raw.githubusercontent.com/patrickallaert/php-sample-application/master/sql/db.sql */
+
+DROP FUNCTION IF EXISTS `ordered_uuid`;
+
+DROP TABLE IF EXISTS `tweet`;
+DROP TABLE IF EXISTS `user`;
+
+DELIMITER //
+CREATE FUNCTION `ordered_uuid`(uuid BINARY(36))
+RETURNS binary(16) DETERMINISTIC
+RETURN UNHEX(
+  CONCAT(
+    SUBSTR(uuid, 15, 4),
+    SUBSTR(uuid, 10, 4),
+    SUBSTR(uuid, 1, 8),
+    SUBSTR(uuid, 20, 4),
+    SUBSTR(uuid, 25))
+);
+//
+DELIMITER ;
+
+CREATE TABLE `user` (
+  `id` varchar(20) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
+  `joined` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `name` varchar(255) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY (`joined`)
+);
+
+CREATE TABLE `tweet` (
+  `id` binary(16) NOT NULL,
+  `user_id` varchar(20) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
+  `ts` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `message` varchar(140) NOT NULL,
+  PRIMARY KEY (`id`),
+  INDEX (`user_id`, `ts`),
+  FOREIGN KEY (`user_id`) REFERENCES `user`(`id`)
+);
+
+CREATE TRIGGER before_insert_tweet
+  BEFORE INSERT ON `tweet`
+  FOR EACH ROW SET new.id = ordered_uuid(uuid());
+
+INSERT INTO `user` (`id`, `joined`, `name`) VALUES
+  ('Princess_Leia', '2016-12-01 12:00:00', 'Princess Leia'),
+  ('Luke', '2016-01-01 12:00:00', 'Luke Skywalker'),
+  ('Obi-Wan', '2015-01-03 12:00:00', 'Obi-Wan "Ben" Kenobi'),
+  ('Darth_Vader', '2015-01-13 13:13:13', 'Anakin Skywalker')
+;
+
+INSERT INTO `tweet` (`user_id`, `ts`, `message`) VALUES
+  ('Luke', '2017-01-01 12:34:56', '@Princess_Leia: I\'m @Luke Skywalker and I\'m here to rescue you!'),
+  ('Obi-Wan', '2016-01-01 14:00:00', '@Luke, the Force will be with you'),
+  ('Obi-Wan', '2016-03-02 15:00:00', 'Use the Force, @Luke'),
+  ('Obi-Wan', '2016-05-08 09:00:00', 'Your clones are very impressive. You must be very proud.'),
+  ('Obi-Wan', '2016-05-09 11:30:00', 'Blast. This is why I hate flying.'),
+  ('Darth_Vader', '2017-01-13 16:00:00', '@Luke, I am your father'),
+  ('Darth_Vader', '2016-05-10 19:00:00', 'I\'ve been waiting for you, @Obi-Wan. We meet again, at last.'),
+  ('Darth_Vader', '2016-06-06 23:00:00', 'Your powers are weak, old man.')
+;
+```
+
+```bash
+[vagrant@control ~]$ cat /vagrant/ansible/files/test.php
+<html>
+<head>
+<title>Demo</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;900&display=swap" rel="stylesheet">
+<style>
+table, th, td {
+  border-bottom: 1px solid black;
+  padding: 10px;
+  border-collapse: collapse;
+  text-align: left;
+}
+.center {
+  margin-left: auto;
+  margin-right: auto;
+}
+h1 {
+  text-align: center;
+  font-size: 50px;
+}
+* {
+  font-family: Montserrat;
+  font-size: 20px;
+
+}
+</style>
+</head>
+<body>
+<h1>Database Query Demo</h1>
+
+<?php
+// Variables
+$db_host='127.0.0.1';
+$db_user='appuser';
+$db_name='appdb';
+$db_password='let me in';
+$db_table='tweet';
+
+// Connecting, selecting database
+$connection = new mysqli($db_host, $db_user, $db_password, $db_name);
+
+if ($connection->connect_error) {
+        die("<p>Could not connect to database server:</p>" . $connection->connect_error);
+}
+
+// Performing SQL query
+$query = "SELECT * FROM $db_table ORDER BY ts DESC";
+$result = $connection->query($query);
+
+// Printing results in HTML
+echo "<table class=\"center\">\n\t<tr><th>user_id</th><th>timestamp</th><th>message</th></tr>\n";
+while ($row = $result->fetch_assoc()) {
+    echo "\t<tr>\n";
+    echo "\t\t<td>" . $row["user_id"] . "</td>\n";
+    echo "\t\t<td>" . $row["ts"] . "</td>\n";
+    echo "\t\t<td>" . $row["message"] . "</td>\n";
+    echo "\t</tr>\n";
+}
+echo "</table>\n";
+
+// Free resultset
+$result->close();
+// Closing connection
+$connection->close();
+?>
+</body>
+```
+
 In `ansible/site.yml`, add a `tasks:` section below `roles:`
 
 ```yaml
@@ -3191,29 +3324,282 @@ An Ansible module is a piece of code that performs a specific action. The `modul
 We'll need to perform the tasks enumerated below. First some advice, though: don't try to do everything at once. Start with the first task, run the playbook, make sure it works *and* verify the result before moving on to the next one. Use the Ansible documentation or find a tutorial on how to write playbooks.
 
 - Copy the database creation script (db.sql) to the server
-    - Use module `ansible.builtin.copy`
-    - Put the file in `/tmp/`
+  - Use module `ansible.builtin.copy`
+  - Put the file in `/tmp/`
+
+  ```bash
+  [vagrant@control ~]$ ansible srv100 -i /vagrant/ansible/inventory_pk.yml -m shell -a "ls /tmp/db.sql"
+  srv100 | FAILED | rc=2 >>
+  ls: cannot access '/tmp/db.sql': No such file or directorynon-zero return code
+  [vagrant@control ~]$ tail -5 /vagrant/ansible/site.yml
+  tasks:
+    - name: Copy the database creation script (db.sql) to the server
+      ansible.builtin.copy:
+        src: /vagrant/ansible/files/db.sql
+        dest: /tmp/
+  [vagrant@control ~]$ ansible-playbook -i /vagrant/ansible/inventory_pk.yml /vagrant/ansible/site.yml > /tmp/test.log; sed -n '/PLAY RECAP/,$p' /tmp/test.log
+  PLAY RECAP *********************************************************************
+  srv100                     : ok=37   changed=1    unreachable=0    failed=0    skipped=13   rescued=0    ignored=0
+
+  [vagrant@control ~]$ ansible srv100 -i /vagrant/ansible/inventory_pk.yml -m shell -a "ls /tmp/db.sql"
+  srv100 | CHANGED | rc=0 >>
+  /tmp/db.sql
+  ```
+
 - Install the PHP script `test.php`
-    - Use the copy module again
-    - Put the file in the appropriate directory and rename it to `index.php`
-    - Verify that you can see the PHP file in a web browser. It won't show the database contents yet, but you should at least see the page title.
+  - Use the copy module again
+  - Put the file in the appropriate directory and rename it to `index.php`
+  - Verify that you can see the PHP file in a web browser. It won't show the database contents yet, but you should at least see the page title.
+
+  ```bash
+  [vagrant@control ~]$ tail -4 /vagrant/ansible/site.yml
+    - name: Copy the php script (test.php) to the server and renaming it (index.php)
+      ansible.builtin.copy:
+        src: /vagrant/ansible/files/test.php
+        dest: /var/www/html/index.php
+  [vagrant@control ~]$ ansible srv100 -i /vagrant/ansible/inventory_pk.yml -m shell -a "ls /var/www/html/index.php"
+  srv100 | FAILED | rc=2 >>
+  ls: cannot access '/var/www.html/index.php': No such file or directorynon-zero return code
+  [vagrant@control ~]$ ansible-playbook -i /vagrant/ansible/inventory_pk.yml /vagrant/ansible/site.yml > /tmp/test.log; sed -n '/PLAY RECAP/,$p' /tmp/test.log
+  PLAY RECAP *********************************************************************
+  srv100                     : ok=38   changed=1    unreachable=0    failed=0    skipped=13   rescued=0    ignored=0
+  [vagrant@control ~]$ ansible srv100 -i /vagrant/ansible/inventory_pk.yml -m shell -a "ls /var/www/html/index.php"
+  srv100 | CHANGED | rc=0 >>
+  /var/www/html/index.php
+  ```
+
+  ![206_indexphp](img/206_indexphp.PNG)
+
 - Create the database
-    - Use module `community.mysql.mysql_db`
-    - As database name, specify a *variable* `db_name`. The variable is initialised in `host_vars/srv100.yml`. The PHP script contains the expected name for the database.
-        - The syntax for using a variable is `{{ VARIABLE_NAME }}`, so `{{ db_name }}` in this case
-    - Use the suitable module parameters to specify that the database shouls be initialised from the `db.sql` script.
-    - Since we're on the same host as the database, it isn't necessary to specify a host, username or password. We can connect using the parameter `login_unix_socket` and specify the socket file. On RedHat-like systems, this is `/var/lib/mysql/mysql.sock`.
-    - Verify that the database was created correctly by logging in to the database server with `sudo mysql` and executing the command `show databases;` and a select query on one of the tables.
+  - Use module `community.mysql.mysql_db`
+  - As database name, specify a *variable* `db_name`. The variable is initialised in `host_vars/srv100.yml`. The PHP script contains the expected name for the database.
+
+    ```bash
+    [vagrant@control ~]$ head -3 /vagrant/ansible/host_vars/srv100.yml
+    #srv100.yml
+    ---
+    db_name: appdb
+    ```
+
+    ```bash
+    [vagrant@control ~]$ grep 'db_name=' /vagrant/ansible/files/test.php
+    $db_name='appdb';
+    ```
+
+    - The syntax for using a variable is `{{ VARIABLE_NAME }}`, so `{{ db_name }}` in this case
+  - Use the suitable module parameters to specify that the database shouls be initialised from the `db.sql` script.
+  - Since we're on the same host as the database, it isn't necessary to specify a host, username or password. We can connect using the parameter `login_unix_socket` and specify the socket file. On RedHat-like systems, this is `/var/lib/mysql/mysql.sock`.
+
+  ```bash
+  [vagrant@control ~]$ tail -6 /vagrant/ansible/site.yml
+      - name: Initializing the database
+        community.mysql.mysql_db:
+          name: "{{ db_name }}"
+          state: import
+          target: /tmp/db.sql
+          login_unix_socket: /var/lib/mysql/mysql.sock
+  ```
+
+  ```bash
+  [vagrant@control ~]$ ansible-playbook -i /vagrant/ansible/inventory_pk.yml /vagrant/ansible/site.yml > /tmp/test.log; sed -n '/Initial/,$p' /tmp/test.log
+  TASK [Initializing the database] ***********************************************
+  fatal: [srv100]: FAILED! => {"changed": false, "msg": "A MySQL module is required: for Python 2.7 either PyMySQL, or MySQL-python, or for Python 3.X mysqlclient or PyMySQL. Consider setting ansible_python_interpreter to use the intended Python version."}
+
+  PLAY RECAP *********************************************************************
+  srv100                     : ok=38   changed=0    unreachable=0    failed=1    skipped=13   rescued=0    ignored=0
+  ```
+
+  `Solution: installing package python3-PyMySQL on srv100 and running the playbook again.`
+
+  ```bash
+  [vagrant@control ~]$ cat /vagrant/ansible/host_vars/srv100.yml
+  #srv100.yml
+  ---
+  db_name: appdb
+  rhbase_install_packages:
+    - bash-completion
+    - vim-enhanced
+    - bind-utils
+    - git
+    - nano
+    - setroubleshoot-server
+    - tree
+    - wget
+    - mariadb-server
+    - httpd
+    - mod_ssl
+    - php
+    - php-mysqlnd
+    - python3-PyMySQL
+  rhbase_start_services:
+    - mariadb
+    - httpd
+  rhbase_firewall_allow_services:
+    - http
+    - https
+  ```
+
+  ```bash
+  [vagrant@control ~]$ ansible-playbook -i /vagrant/ansible/inventory_pk.yml /vagrant/ansible/site.yml > /tmp/test.log; sed -n '/PLAY RECAP/,$p' /tmp/test.log
+  PLAY RECAP ******************************************************************************************************************************************************************
+  srv100                     : ok=39   changed=2    unreachable=0    failed=0    skipped=13   rescued=0    ignored=0
+  ```
+
+  - Verify that the database was created correctly by logging in to the database server with `sudo mysql` and executing the command `show databases;` and a select query on one of the tables.
+
+  ```bash
+  [vagrant@control ~]$ ssh vagrant@172.16.128.100
+  vagrant@172.16.128.100's password:
+
+  This system is built by the Bento project by Chef Software
+  More information can be found at https://github.com/chef/bento
+  Last login: Tue Oct 22 11:50:58 2024 from 172.16.128.253
+  [vagrant@srv100 ~]$ sudo mysql
+  Welcome to the MariaDB monitor.  Commands end with ; or \g.
+  Your MariaDB connection id is 6
+  Server version: 10.5.22-MariaDB MariaDB Server
+
+  Copyright (c) 2000, 2018, Oracle, MariaDB Corporation Ab and others.
+
+  Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+  MariaDB [(none)]> show databases;
+  +--------------------+
+  | Database           |
+  +--------------------+
+  | appdb              |
+  | information_schema |
+  | mysql              |
+  | performance_schema |
+  +--------------------+
+  4 rows in set (0.000 sec)
+
+  MariaDB [(none)]>
+  ```
+
 - Create a database user
-    - Use module `community.mysql.mysql_user`
-    - As name and password, use the variables `db_user` and `db_password` respectively. These are initialised in `host_vars/srv100.yml` with the expected values found in the PHP script.
-    - Ensure that this user has all privileges on the database specified by variable `db_name`
-    - Connect using the `login_unix_socket` parameter
-    - Verify that the database user exists and that it can be used log in to the database with `mysql -uUSER -pPASSWORD DATABASE` (replace USER, PASSWORD and DATABASE with the correct values), and that you can show the tables and contents.
+  - Use module `community.mysql.mysql_user`
+  - As name and password, use the variables `db_user` and `db_password` respectively. These are initialised in `host_vars/srv100.yml` with the expected values found in the PHP script.
+
+  ```bash
+  [vagrant@control ~]$ grep 'db_user=' /vagrant/ansible/files/test.php
+  $db_user='appuser';
+  [vagrant@control ~]$ grep 'db_password=' /vagrant/ansible/files/test.php
+  $db_password='let me in';
+  ```
+
+  ```bash
+  [vagrant@control ~]$ head -5 /vagrant/ansible/host_vars/srv100.yml
+  #srv100.yml
+  ---
+  db_name: appdb
+  db_user: appuser
+  db_password: 'let me in'
+  ```
+
+  - Ensure that this user has all privileges on the database specified by variable `db_name`
+  - Connect using the `login_unix_socket` parameter
+
+  ```bash
+  [vagrant@control ~]$ tail -6 /vagrant/ansible/site.yml
+      - name: Create database user with all database privileges
+        community.mysql.mysql_user:
+          name: "{{ db_user }}"
+          password: "{{ db_password }}"
+          priv: '*.*:ALL'
+          login_unix_socket: /var/lib/mysql/mysql.sock
+  ```
+
+  ```bash
+  [vagrant@control ~]$ ansible-playbook -i /vagrant/ansible/inventory_pk.yml /vagrant/ansible/site.yml
+
+  ...
+
+  TASK [Initializing the database] ********************************************************************************************************************************************
+  changed: [srv100]
+
+  TASK [Create database user with all database privileges] ********************************************************************************************************************
+  [WARNING]: Option column_case_sensitive is not provided. The default is now false, so the column's name will be uppercased. The default will be changed to true in
+  community.mysql 4.0.0.
+  changed: [srv100]
+
+  PLAY RECAP ******************************************************************************************************************************************************************
+  srv100                     : ok=40   changed=2    unreachable=0    failed=0    skipped=13   rescued=0    ignored=0
+  ```
+
+  `Mind you Initializing the database does not seem redundant`
+
+  - Verify that the database user exists and that it can be used log in to the database with `mysql -uUSER -pPASSWORD DATABASE` (replace USER, PASSWORD and DATABASE with the correct values), and that you can show the tables and contents.
+
+  ```bash
+  [vagrant@control ~]$ ssh vagrant@172.16.128.100
+  vagrant@172.16.128.100's password:
+
+  This system is built by the Bento project by Chef Software
+  More information can be found at https://github.com/chef/bento
+  Last login: Tue Oct 22 12:07:16 2024 from 172.16.128.253
+  [vagrant@srv100 ~]$ mysql -uappuser -p"let me in" appdb
+  Reading table information for completion of table and column names
+  You can turn off this feature to get a quicker startup with -A
+
+  Welcome to the MariaDB monitor.  Commands end with ; or \g.
+  Your MariaDB connection id is 13
+  Server version: 10.5.22-MariaDB MariaDB Server
+
+  Copyright (c) 2000, 2018, Oracle, MariaDB Corporation Ab and others.
+
+  Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+  MariaDB [appdb]> use appdb;
+  Database changed
+  MariaDB [appdb]> select * from user;
+  +---------------+---------------------+----------------------+
+  | id            | joined              | name                 |
+  +---------------+---------------------+----------------------+
+  | Darth_Vader   | 2015-01-13 13:13:13 | Anakin Skywalker     |
+  | Luke          | 2016-01-01 12:00:00 | Luke Skywalker       |
+  | Obi-Wan       | 2015-01-03 12:00:00 | Obi-Wan "Ben" Kenobi |
+  | Princess_Leia | 2016-12-01 12:00:00 | Princess Leia        |
+  +---------------+---------------------+----------------------+
+  4 rows in set (0.001 sec)
+
+  MariaDB [appdb]>  
+  ```
 
 After these steps, you should see the contents of the database when you open the PHP script in a web browser:
 
 ![PHP script showing database contents](img/4-website.png)
+
+`Sadly enough:`
+
+![206_indexphp](img/206_indexphp.PNG)
+
+`A SELinux issue?`
+
+```bash
+[vagrant@control ~]$ ansible srv100 -i /vagrant/ansible/inventory_pk.yml -m shell -a "grep denied /var/log/audit/audit.log | tail -1"
+srv100 | CHANGED | rc=0 >>
+type=AVC msg=audit(1729599048.600:19456): avc:  denied  { name_connect } for  pid=16837 comm="php-fpm" dest=3306 scontext=system_u:system_r:httpd_t:s0 tcontext=system_u:object_r:mysqld_port_t:s0 tclass=tcp_socket permissive=0
+[vagrant@control ~]$ ansible srv100 -i /vagrant/ansible/inventory_pk.yml -m shell -a "grep 'httpd_can_network_connect' /var/log/messages |tail -1"
+srv100 | CHANGED | rc=0 >>
+Oct 22 12:16:53 srv100 python3[53409]: ansible-ansible.legacy.command Invoked with _raw_params=grep 'httpd_can_network_connect' /var/log/messages _uses_shell=True stdin_add_newline=True strip_empty_ends=True argv=None chdir=None executable=None creates=None removes=None stdin=None
+```
+
+`Solution:`
+
+```bash
+[vagrant@control ~]$ tail -2 /vagrant/ansible/host_vars/srv100.yml
+rhbase_selinux_booleans:
+  - httpd_can_network_connect_db
+```
+
+```bash
+[vagrant@control ~]$ ansible-playbook -i /vagrant/ansible/inventory_pk.yml /vagrant/ansible/site.yml > /dev/null 2> /dev/null
+```
+
+![207_indexphpok](img/207_indexphpok.PNG)
+
+`Victory!`
 
 ### 2.4.4. SSL certificate
 

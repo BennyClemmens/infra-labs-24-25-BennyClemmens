@@ -1,5 +1,8 @@
 #srv100.yml
 ---
+db_name: appdb
+db_user: appuser
+db_password: 'let me in'
 rhbase_install_packages:
   - bash-completion
   - vim-enhanced
@@ -14,9 +17,12 @@ rhbase_install_packages:
   - mod_ssl
   - php
   - php-mysqlnd
+  - python3-PyMySQL
 rhbase_start_services:
   - mariadb
   - httpd
 rhbase_firewall_allow_services:
   - http
   - https
+rhbase_selinux_booleans:
+  - httpd_can_network_connect_db
