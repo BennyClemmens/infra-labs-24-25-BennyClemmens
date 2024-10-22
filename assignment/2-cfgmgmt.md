@@ -2908,9 +2908,58 @@ Verify that you can SSH into the VM with your username, without a password. Open
 ssh USER@IP_ADDRESS
 ```
 
+```bash
+PS C:\Users\Benny\.ssh> ssh benny@172.16.128.100
+
+This system is built by the Bento project by Chef Software
+More information can be found at https://github.com/chef/bento
+Last login: Mon Oct 21 13:44:35 2024 from 172.16.0.1
+[benny@srv100 ~]$ whoami
+benny
+```
+
 where you replace USER with your chosen username (case-sensitive!) and the IP address of your VM on interface `eth1` (starts with 172). The first time you do this, you will get a warning that the authenticity of this host can't be established. Enter `yes` to confirm that you want to continue connecting. You should also be able to log in from your Ansible control node!
 
+`This question was not asked, probably because it was allready in C:\Users\Benny\.ssh\known_hosts`
+
 Since the previous changes were applied to `group_vars/servers.yml`, every VM that we will add to this will automatically have these same properties.
+
+`In retrospect and with the knowledge (from the next paragraph) that specific settings in servers.yml do not complement but override settings in all.yml. Let's try this:`
+
+```bash
+[vagrant@control ~]$ cat /vagrant/ansible/group_vars/all.yml
+# group_vars/all.yml
+# Variables visible to all nodes
+---
+rhbase_users:
+  - name: benny
+    comment: 'Benny Clemmens'
+    groups:
+      - users
+      - wheel
+    password: '$1$mgwL8QQE$xXSoEkguxSasIduq6ieu30'
+    ssh_key: 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDFI4Qm7YeH2CZQlKcmlpj2U0zpIYT74nRpiVfWnYy9p+vjChA0lF4lZ9XSGevq+ZVHWV3RBzpmcBS5i0XrZSGbEfh6zwsYpAy7K8ErIbSepdNJkBm1jMslGO3E5gabU2tP/+TUpyfrHuuV377IrwQ3XxPOjuCPj0WOwlcFgZovtLc0ZH39ns6O8K3SVYLkho2NdgMXi4gJAlQCOj99kjA+ZT5xhOJ832w2rJn7t8XfS+fgOwoNhErv9Mq6r8c7zyE3eYKkMfk0S24jFyC66fZSu7/LERC/F4ipGGc4MyB9ODu47CAE9knRA358nuB9x4lnklVYP7twPP0iOPrgqLEcYt6fakNaniHCJxmyokINys2NqtjZNDJEBkPBWvOPoRoM555GNIsVpnsJparVmFVoCtMGCUNnvyClRBI90To1t39LMhiN8oTshU0zbuErdkln2iHX4E8czQyfcYkSNtZ0x8FPWBQxzsc/t5UR6NDLHorZTBqbXS0gHH0oxJvVL58= benny.clemmens@student.hogent.be'
+[vagrant@control ~]$ cat /vagrant/ansible/group_vars/servers.yml
+# /vagrant/ansible/group_vars/servers.yml
+---
+rhbase_repositories:
+  - epel-release
+rhbase_install_packages:
+  - bash-completion
+  - vim-enhanced
+  - bind-utils
+  - git
+  - nano
+  - setroubleshoot-server
+  - tree
+  - wget
+
+[vagrant@control ~]$ ansible-playbook -i /vagrant/ansible/inventory_pk.yml /vagrant/ansible/site.yml > /tmp/test.log; sed -n '/PLAY RECAP/,$p' /tmp/test.log
+PLAY RECAP *********************************************************************
+srv100                     : ok=34   changed=0    unreachable=0    failed=0    skipped=15   rescued=0    ignored=0
+```
+
+`Veni, vidi, vici.`
 
 ## 2.4. Web application server
 
