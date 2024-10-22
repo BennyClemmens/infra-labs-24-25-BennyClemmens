@@ -1,3 +1,4 @@
 ---
 roles:
   - name: bertvv.rh-base
+  - name: bertvv.httpd

@@ -26,3 +26,7 @@ rhbase_firewall_allow_services:
   - https
 rhbase_selinux_booleans:
   - httpd_can_network_connect_db
+httpd_ssl_certificate_file: selfsigned.crt
+httpd_ssl_certificate_key_file: selfsigned.key
+httpd_ssl_protocol: 'all -SSLv3 -TLSv1'
+httpd_ssl_cipher_suite: 'HIGH:!aNULL:!MD5'

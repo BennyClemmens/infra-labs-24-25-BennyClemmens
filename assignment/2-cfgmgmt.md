@@ -3603,11 +3603,212 @@ rhbase_selinux_booleans:
 
 ### 2.4.4. SSL certificate
 
+`This paragraph is new in 24-25 edition.`
+
 Nowadays, a webserver is not complete without supporting HTTPS. This means that the server should have an SSL certificate installed. The default installation of Apache already has a self-signed certificate, but in production use, you would install a certificate from a trusted certificate authority (CA). For this assignment, we will simulate the installation of an SSL certificate, but we'll create one that is self-signed.
 
 The creation of a certificate should not be automated, as it is a step that is performed only once. However, the installation of the certificate can be automated. The role `bertvv.httpd` supports the installation of a certificate. The role documentation explains how to do this.
 
 So, install the necessary tools to generate an SSL certificate, create it, and copy the generated files to the correct location in your Ansible project tree. Then modify the playbook or `hosts_vars` to install the certificate. Finally, verify that the certificate is installed correctly by opening the website with HTTPS.
+
+```bash
+[vagrant@srv100 ~]$ which openssl
+/usr/bin/openssl
+```
+
+<https://wiki.centos.org/HowTos(2f)Https.html>
+
+```bash
+[vagrant@srv100 ~]$ openssl req -new -newkey rsa:2048 -days 3650 -nodes -x509 -keyout ~/selfsigned.key -out ~/selfsigned.crt
+....+...+.+.................+.......+..+....+..+...+......+.+..+...+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*.....+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*.+.......+.....+.........+...+.+...........+....+..+....+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+.....+...+.....+....+.....+.+...+.........+..+.+..+...+.........+....+..+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*......+....+........+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*...+....+...........+.........+.+...+...+.....+...+....+..+....+.........+..+......+...............+.............+...........+....+............+.....+.......+..+.........+.+.......................+.+..+.........+..........+...+...+........+.......+...+......+......+....................+.............+..+.......+.....+..................+....+..................+............+........+.......+......+.....+...+......+...............+....+......+...+......+......+......+.........+..............+.+........+.+..+..........+.........+...+..+.........+....+.....+...+.........+...+.+.........+...............+..+...+.+.....+.....................+...+...+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+-----
+You are about to be asked to enter information that will be incorporated
+into your certificate request.
+What you are about to enter is what is called a Distinguished Name or a DN.
+There are quite a few fields but you can leave some blank
+For some fields there will be a default value,
+If you enter '.', the field will be left blank.
+-----
+Country Name (2 letter code) [XX]:BE
+State or Province Name (full name) []:OVL
+Locality Name (eg, city) [Default City]:Ghent
+Organization Name (eg, company) [Default Company Ltd]:HoGent
+Organizational Unit Name (eg, section) []:
+Common Name (eg, your name or your server's hostname) []:
+Email Address []:
+```
+
+```bash
+[vagrant@srv100 ~]$ ls -al self*
+-rw-r--r--. 1 vagrant vagrant 1220 Oct 22 13:07 selfsigned.crt
+-rw-------. 1 vagrant vagrant 1704 Oct 22 13:06 selfsigned.key
+[vagrant@srv100 ~]$ cp ~/self* /vagrant/ansible/files/
+[vagrant@srv100 ~]$ ls -al /vagrant/ansible/files/
+total 20
+drwxrwxrwx. 1 vagrant vagrant    0 Oct 22 13:10 .
+drwxrwxrwx. 1 vagrant vagrant 4096 Oct 22 08:43 ..
+-rwxrwxrwx. 1 vagrant vagrant 2122 Oct 11 06:21 db.sql
+-rwxrwxrwx. 1 vagrant vagrant 1220 Oct 22 13:10 selfsigned.crt
+-rwxrwxrwx. 1 vagrant vagrant 1704 Oct 22 13:10 selfsigned.key
+-rwxrwxrwx. 1 vagrant vagrant 1417 Oct 11 06:21 test.php
+```
+
+`Mind you that copying these files to the shared folder/repo is not the way to go for public accessible sites.`
+
+```bash
+[vagrant@control ~]$ cat /vagrant/ansible/requirements.yml
+---
+roles:
+  - name: bertvv.rh-base
+  - name: bertvv.httpd
+[vagrant@control ~]$ ansible-galaxy install -r /vagrant/ansible/requirements.yml
+Starting galaxy role install process
+[WARNING]: - bertvv.rh-base (v4.0.4) is already installed - use --force to change version to unspecified
+- downloading role 'httpd', owned by bertvv
+- downloading role from https://github.com/bertvv/ansible-role-httpd/archive/v2.0.1.tar.gz
+- extracting bertvv.httpd to /home/vagrant/.ansible/roles/bertvv.httpd
+- bertvv.httpd (v2.0.1) was installed successfully
+```
+
+<https://galaxy.ansible.com/ui/standalone/roles/bertvv/httpd>
+
+```bash
+[vagrant@control ~]$ tail -4 /vagrant/ansible/host_vars/srv100.yml
+httpd_ssl_certificate_file: /vagrant/ansible/files/selfsigned.crt
+httpd_ssl_certificate_key_file:  /vagrant/ansible/files/selfsigned.key
+httpd_ssl_protocol: 'all -SSLv3 -TLSv1'
+httpd_ssl_cipher_suite: 'HIGH:!aNULL:!MD5'
+```
+
+```bash
+[vagrant@control ~]$ head -7 /vagrant/ansible/site.yml
+# site.yml
+---
+- name: Configure srv100 # Each task should have a name
+  hosts: srv100          # Indicates hosts this applies to (host or group name)
+  roles:                 # Enumerate roles to be applied
+    - bertvv.rh-base
+    - bertvv.httpd
+```
+
+```bash
+[vagrant@control ~]$ ansible-playbook -i /vagrant/ansible/inventory_pk.yml /vagrant/ansible/site.yml
+
+...
+
+TASK [bertvv.httpd : include_vars] ******************************************************************************************************************************************
+ok: [srv100] => (item=/home/vagrant/.ansible/roles/bertvv.httpd/vars/RedHat.yml)
+
+TASK [bertvv.httpd : Ensure Apache is installed] ****************************************************************************************************************************
+ok: [srv100] => (item=hostname)
+ok: [srv100] => (item=httpd)
+ok: [srv100] => (item=mod_ssl)
+
+TASK [bertvv.httpd : Install main configuration file] ***********************************************************************************************************************
+changed: [srv100]
+
+TASK [bertvv.httpd : Install status configuration file] *********************************************************************************************************************
+skipping: [srv100]
+
+TASK [bertvv.httpd : Install certificate files] *****************************************************************************************************************************
+included: /home/vagrant/.ansible/roles/bertvv.httpd/tasks/certificates.yml for srv100
+
+TASK [bertvv.httpd : Check if default SSL certificate exists] ***************************************************************************************************************
+skipping: [srv100]
+
+TASK [bertvv.httpd : Generate default SSL certificate] **********************************************************************************************************************
+skipping: [srv100]
+
+TASK [bertvv.httpd : Copy user defined key file] ****************************************************************************************************************************
+fatal: [srv100]: FAILED! => {"changed": false, "checksum": "4206ce231477a4f21dad53fd03238182263ca075", "msg": "Destination directory /etc/pki/tls/private//vagrant/ansible/files does not exist"}
+
+PLAY RECAP ******************************************************************************************************************************************************************
+srv100                     : ok=41   changed=1    unreachable=0    failed=1    skipped=15   rescued=0    ignored=0
+```
+
+```bash
+[vagrant@srv100 ~]$ ls selfsigned.*
+selfsigned.crt  selfsigned.key
+[vagrant@srv100 ~]$ sudo cp selfsigned.* /etc/pki/tls/private/
+[vagrant@srv100 ~]$ exit
+logout
+Connection to 172.16.128.100 closed.
+[vagrant@control ~]$ tail -4 /vagrant/ansible/host_vars/srv100.yml
+httpd_ssl_certificate_file: selfsigned.crt
+httpd_ssl_certificate_key_file: selfsigned.key
+httpd_ssl_protocol: 'all -SSLv3 -TLSv1'
+httpd_ssl_cipher_suite: 'HIGH:!aNULL:!MD5'
+```
+
+```bash
+[vagrant@control ~]$ ansible-playbook -i /vagrant/ansible/inventory_pk.yml /vagrant/ansible/site.yml
+
+...
+
+TASK [bertvv.httpd : include_vars] ******************************************************************************************************************************************
+ok: [srv100] => (item=/home/vagrant/.ansible/roles/bertvv.httpd/vars/RedHat.yml)
+
+TASK [bertvv.httpd : Ensure Apache is installed] ****************************************************************************************************************************
+ok: [srv100] => (item=hostname)
+ok: [srv100] => (item=httpd)
+ok: [srv100] => (item=mod_ssl)
+
+TASK [bertvv.httpd : Install main configuration file] ***********************************************************************************************************************
+ok: [srv100]
+
+TASK [bertvv.httpd : Install status configuration file] *********************************************************************************************************************
+skipping: [srv100]
+
+TASK [bertvv.httpd : Install certificate files] *****************************************************************************************************************************
+included: /home/vagrant/.ansible/roles/bertvv.httpd/tasks/certificates.yml for srv100
+
+TASK [bertvv.httpd : Check if default SSL certificate exists] ***************************************************************************************************************
+skipping: [srv100]
+
+TASK [bertvv.httpd : Generate default SSL certificate] **********************************************************************************************************************
+skipping: [srv100]
+
+TASK [bertvv.httpd : Copy user defined key file] ****************************************************************************************************************************
+ok: [srv100]
+
+TASK [bertvv.httpd : Copy custom certificate file] **************************************************************************************************************************
+changed: [srv100]
+
+TASK [bertvv.httpd : Copy custom certificate chain file] ********************************************************************************************************************
+skipping: [srv100]
+
+TASK [bertvv.httpd : Copy custom CA certificate file] ***********************************************************************************************************************
+skipping: [srv100]
+
+TASK [bertvv.httpd : Install mod_ssl configuration file] ********************************************************************************************************************
+changed: [srv100]
+
+TASK [bertvv.httpd : Ensure Apache is always running] ***********************************************************************************************************************
+ok: [srv100]
+
+TASK [Copy the database creation script (db.sql) to the server] *************************************************************************************************************
+ok: [srv100]
+
+TASK [Copy the php script (test.php) to the server and renaming it (index.php)] *********************************************************************************************
+ok: [srv100]
+
+TASK [Initializing the database] ********************************************************************************************************************************************
+changed: [srv100]
+
+TASK [Create database user with all database privileges] ********************************************************************************************************************
+[WARNING]: Option column_case_sensitive is not provided. The default is now false, so the column's name will be uppercased. The default will be changed to true in
+community.mysql 4.0.0.
+ok: [srv100]
+
+RUNNING HANDLER [bertvv.httpd : restart httpd] ******************************************************************************************************************************
+changed: [srv100]
+
+PLAY RECAP ******************************************************************************************************************************************************************
+srv100                     : ok=50   changed=4    unreachable=0    failed=0    skipped=17   rescued=0    ignored=0
+```
+
+![208_certificate](img/208_certificate.PNG)
 
 ### 2.4.5. Idempotency
 
